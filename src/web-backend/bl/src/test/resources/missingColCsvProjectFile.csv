@@ -1,0 +1,3 @@
+Id;regCode;title;author;uco;state;dateBegin;dateEnd;muRole;investor;hs;department;annotation;annotationLanguage;annotationTransl;authorType
+000001;0001/2022;Project title 1;Ing. John Doe;00000;active;01.01.2024;30.06.2028;Beneficiary-coordinator;Investor 1;LF;Department of Histology and Embryology
+000002;0002/2022;Project title 2;Ing. Jenna Doe;00001;proposed;01.07.2023;30.06.2028;Partner;Investor 2;LF;International Clinical Research Centre;Some lengthy annotation 2;EN;;academic, employee

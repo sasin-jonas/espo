@@ -1,0 +1,94 @@
+version: "3.9"
+services:
+  # Elasticsearch Docker Images: https://www.docker.elastic.co/
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD: pgadmin
+      POSTGRES_DB: projectapp
+      PGDATA: "/data/postgres"
+    volumes:
+      - postgres:/data/postgres
+  
+  app-api:
+    container_name: app-api
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    entrypoint: "mvn -f /web-backend/api/pom.xml spring-boot:run"
+    environment:
+      - APP_HIBERNATE_DLL=validate
+      - APP_DATABASE_HOSTNAME=postgres
+      - APP_DATABASE_PORT=5432
+      - APP_DATABASE_NAME=projectapp
+      - APP_DATABASE_USERNAME=pgadmin
+      - APP_DATABASE_PASSWORD=pgadmin
+      - APP_REQUEST_MAXSIZE=10MB
+      - APP_ISSUER_URL=https://oidc.muni.cz/oidc/
+      - APP_ISSUER_CLIENTID=8ea6b22e-7c97-4211-8fe6-9dc434e6b90e
+      - APP_ISSUER_JWK_URL=https://oidc.muni.cz/oidc/jwk
+      - APP_ISSUER_USERINFO_URL=https://oidc.muni.cz/oidc/userinfo
+      - APP_ISSUER_AUTHORIZE_URL=https://oidc.muni.cz/oidc/authorize
+      - APP_ISSUER_TOKEN_URL=https://oidc.muni.cz/oidc/token
+      - APP_ADMIN_IDENTIFIER=480171@muni.cz
+      - APP_DATALOADER_URL=http://data-loader
+      - APP_DATALOADER_PORT=5001
+      - APP_ELASTIC_HOSTNAME=elasticsearch
+      - APP_ELASTIC_PORT=9200
+      - APP_STOPWORDS_FILE=stopwords.txt
+    depends_on:
+      - postgres
+      - elasticsearch
+      - data-loader
+
+  app-fe:
+    container_name: app-fe
+    build:
+      dockerfile: Dockerfile-fe
+      context: .
+      args:
+        REACT_APP_API_URL: http://localhost:3000/api
+        REACT_APP_THESIS_URL: https://www.fi.muni.cz/
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app-api
+
+  data-loader:
+    container_name: data-loader
+    build:
+      context: .
+      dockerfile: Dockerfile-loader
+    entrypoint: "python3 main.py"
+    environment:
+      - APP_ELASTIC_HOSTNAME=elasticsearch
+      - APP_ELASTIC_PORT=9200
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  postgres:
+
+
+

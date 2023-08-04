@@ -1,0 +1,43 @@
+services:
+  # Elasticsearch Docker Images: https://www.docker.elastic.co/
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    container_name: elasticsearch_test
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  postgres:
+    image: 'postgres:latest'
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD: pgadmin
+      POSTGRES_DB: projectapp
+      PGDATA: "/data/postgres"
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  postgres:
+
+
+

@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "user.admin-uco",
+      "type": "java.lang.String",
+      "description": "Used as setting for the default application admin."
+    },
+    {
+      "name": "files.stopwords",
+      "type": "java.lang.String",
+      "description": "Name of the file used for defining stopwords."
+    },
+    {
+      "name": "api-route.data-loader",
+      "type": "java.lang.String",
+      "description": "Url of the data-loader api service."
+    }
+  ]
+}

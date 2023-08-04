@@ -1,0 +1,10 @@
+FROM python:3.10-slim-buster
+
+# Set work directory
+WORKDIR /data_loader
+
+# Copy project
+COPY data_loader .
+COPY data_loader/requirements.txt .
+
+RUN pip3 install -r requirements.txt

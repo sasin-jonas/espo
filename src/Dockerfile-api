@@ -1,0 +1,3 @@
+FROM maven:3.8.4-openjdk-17-slim
+COPY web-backend /web-backend
+RUN mvn -f /web-backend/pom.xml clean install

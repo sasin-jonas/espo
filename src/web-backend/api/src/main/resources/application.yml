@@ -1,0 +1,61 @@
+spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  datasource:
+    url: 'jdbc:postgresql://${APP_DATABASE_HOSTNAME:localhost}/${APP_DATABASE_NAME:projectapp}'
+    username: ${APP_DATABASE_USERNAME:pgadmin}
+    password: ${APP_DATABASE_PASSWORD:pgadmin}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${APP_HIBERNATE_DLL:validate}
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+      jakarta:
+        persistence:
+          sharedCache:
+            mode: UNSPECIFIED
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: ${APP_REQUEST_MAXSIZE:10MB}
+      max-request-size: ${APP_REQUEST_MAXSIZE:10MB}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${APP_ISSUER_URL:https://oidc.muni.cz/oidc/}
+  mvc:
+    log-request-details: true
+
+server:
+  servlet:
+    context-path: '/api'
+
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: ${APP_ISSUER_CLIENTID:8ea6b22e-7c97-4211-8fe6-9dc434e6b90e}
+      app-name: "Opportunity & collaboration"
+      use-pkce-with-authorization-code-grant: true
+
+
+# custom properties:
+user:
+  initial-admin-id: ${APP_ADMIN_IDENTIFIER}
+api-route:
+  data-loader-url: ${APP_DATALOADER_URL:http://127.0.0.1}
+  data-loader-port: ${APP_DATALOADER_PORT:5001}
+  elastic-hostname: ${APP_ELASTIC_HOSTNAME:localhost}
+  elastic-port: ${APP_ELASTIC_PORT:9200}
+  issuer-jwk-uri: ${APP_ISSUER_JWK_URL:https://oidc.muni.cz/oidc/jwk}
+  issuer-userinfo-uri: ${APP_ISSUER_USERINFO_URL:https://oidc.muni.cz/oidc/userinfo}
+  issuer-authorize-uri: ${APP_ISSUER_AUTHORIZE_URL:https://oidc.muni.cz/oidc/authorize}
+  issuer-token-uri: ${APP_ISSUER_TOKEN_URL:https://oidc.muni.cz/oidc/token}
+files:
+  stopwords: ${APP_STOPWORDS_FILE:stopwords.txt}
