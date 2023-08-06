@@ -44,4 +44,5 @@ def download_csv() -> Response:
 if __name__ == "__main__":
     from waitress import serve
 
+    print("Server up")
     serve(app, host="0.0.0.0", port=5001)

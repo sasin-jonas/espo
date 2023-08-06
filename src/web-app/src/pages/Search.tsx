@@ -1,8 +1,9 @@
-import { FC } from 'react';
-import { Grid } from '@mui/material';
+import React, { FC } from 'react';
+import { Grid, Typography } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 
 import usePageTitle from '../hooks/usePageTitle';
 import ButtonWithIconAndTooltip from '../components/controls/ButtonWithIconAndTooltip';
@@ -23,37 +24,58 @@ const Search: FC = () => {
 		"You can later decide, if you want to take other author's projects into consideration.";
 	const phraseToolTip =
 		'Search by a phrase or keywords. Simple, yet effective.';
+	const opportunityToolTip =
+		'Search by an opportunity for people, who might be interested in it.';
 
 	return (
-		<Grid container spacing={1} justifyContent="center">
-			<Grid item xs={3}>
-				<ButtonWithIconAndTooltip
-					text="Search by phrase"
-					tooltip={phraseToolTip}
-					linkPath="/phraseSearch"
-				>
-					<FormatQuoteIcon />
-				</ButtonWithIconAndTooltip>
+		<>
+			<Typography align="center" variant="h5">
+				Search for opportunities:
+			</Typography>
+			<Grid container spacing={1} justifyContent="center">
+				<Grid item xs={3}>
+					<ButtonWithIconAndTooltip
+						text="Search by phrase"
+						tooltip={phraseToolTip}
+						linkPath="/phraseSearch"
+					>
+						<FormatQuoteIcon />
+					</ButtonWithIconAndTooltip>
+				</Grid>
+				<Grid item xs={3}>
+					<ButtonWithIconAndTooltip
+						text="Search by group or person"
+						tooltip={groupToolTip}
+						linkPath="/personSearch"
+					>
+						<PeopleIcon />
+					</ButtonWithIconAndTooltip>
+				</Grid>
+				<Grid item xs={3}>
+					<ButtonWithIconAndTooltip
+						text="Search by project"
+						tooltip={projectToolTip}
+						linkPath="/projectSearch"
+					>
+						<TipsAndUpdatesIcon />
+					</ButtonWithIconAndTooltip>
+				</Grid>
 			</Grid>
-			<Grid item xs={3}>
-				<ButtonWithIconAndTooltip
-					text="Search by group or person"
-					tooltip={groupToolTip}
-					linkPath="/personSearch"
-				>
-					<PeopleIcon />
-				</ButtonWithIconAndTooltip>
+			<Typography align="center" variant="h5">
+				Search by opportunity:
+			</Typography>
+			<Grid>
+				<Grid item xs={3}>
+					<ButtonWithIconAndTooltip
+						text="Search by opportunity"
+						tooltip={opportunityToolTip}
+						linkPath="/opportunitySearch"
+					>
+						<WhatshotIcon />
+					</ButtonWithIconAndTooltip>
+				</Grid>
 			</Grid>
-			<Grid item xs={3}>
-				<ButtonWithIconAndTooltip
-					text="Search by project"
-					tooltip={projectToolTip}
-					linkPath="/projectSearch"
-				>
-					<TipsAndUpdatesIcon />
-				</ButtonWithIconAndTooltip>
-			</Grid>
-		</Grid>
+		</>
 	);
 };
 

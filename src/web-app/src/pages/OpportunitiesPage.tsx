@@ -140,7 +140,7 @@ const OpportunitiesPage: FC = () => {
 					Download sample CSV
 				</Button>
 			</UploadButtons>
-			<OpportunitiesDataGrid />
+			<OpportunitiesDataGrid selection={false} />
 		</>
 	) : (
 		<Typography>You are unauthorized for the management section</Typography>

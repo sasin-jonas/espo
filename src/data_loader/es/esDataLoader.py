@@ -2,7 +2,7 @@ import csv
 import io
 import logging
 import uuid
-from typing import List, Dict, Any, Tuple, Union
+from typing import List, Dict, Any
 
 from elasticsearch import helpers, Elasticsearch
 from werkzeug.datastructures import FileStorage

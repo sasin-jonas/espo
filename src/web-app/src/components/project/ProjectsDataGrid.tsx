@@ -383,7 +383,11 @@ const ProjectsDataGrid: FC<Props> = ({
 				sx={{
 					'& .column--header--theme': {
 						backgroundColor: '#d4d4d5'
-					}
+					},
+					'& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer':
+						{
+							display: 'none'
+						}
 				}}
 				paginationMode={serverSide ? 'server' : 'client'}
 				filterMode={serverSide ? 'server' : 'client'}

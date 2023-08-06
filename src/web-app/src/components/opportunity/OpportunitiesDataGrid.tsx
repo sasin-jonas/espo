@@ -6,6 +6,7 @@ import {
 	GridFilterItem,
 	GridFilterModel,
 	GridRenderCellParams,
+	GridSelectionModel,
 	GridSortItem,
 	GridSortModel
 } from '@mui/x-data-grid';
@@ -35,12 +36,29 @@ import { useAlert } from '../../hooks/useAppAlert';
 import { AppAlertTypes } from '../../types/Alert.Types';
 
 import OpportunityDetail from './OpportunityDetail';
+import { ProjectDto } from '../../types/Project.Types';
+
+type Props = {
+	dataRows?: ProjectDto[];
+	pSize?: number;
+	loading?: boolean;
+	onGridSelectionChange?: (ids: GridSelectionModel) => void;
+	onPageSizeChange?: (size: number) => void;
+	selection: boolean;
+};
 
 /**
  * Opportunities data grid
  * @constructor
  */
-const OpportunitiesDataGrid: FC = () => {
+const OpportunitiesDataGrid: FC<Props> = ({
+	dataRows,
+	pSize,
+	loading,
+	onGridSelectionChange,
+	onPageSizeChange,
+	selection
+}) => {
 	// context
 	const qc = useQueryClient();
 	const { token } = useContext<IAuthContext>(AuthContext);
@@ -219,7 +237,7 @@ const OpportunitiesDataGrid: FC = () => {
 			headerName: '',
 			filterable: false,
 			sortable: false,
-			minWidth: 150,
+			minWidth: selection ? 100 : 150,
 			headerClassName: 'column--header--theme',
 			renderCell: (params: GridRenderCellParams<string>) => (
 				<strong>
@@ -230,12 +248,14 @@ const OpportunitiesDataGrid: FC = () => {
 							<Visibility />
 						</Tooltip>
 					</OpportunityDetail>
-					<DeleteButtonWithConfirmDialog
-						onClick={() => deleteOpportunityHandler(params.value)}
-					>
-						Really want to delete opportunity{' '}
-						{`'${rows.find(p => p.esId === params.value)?.title}'`}?
-					</DeleteButtonWithConfirmDialog>
+					{!selection && (
+						<DeleteButtonWithConfirmDialog
+							onClick={() => deleteOpportunityHandler(params.value)}
+						>
+							Really want to delete opportunity{' '}
+							{`'${rows.find(p => p.esId === params.value)?.title}'`}?
+						</DeleteButtonWithConfirmDialog>
+					)}
 				</strong>
 			)
 		}
@@ -262,14 +282,18 @@ const OpportunitiesDataGrid: FC = () => {
 				pagination
 				page={page}
 				loading={filterOpportunitiesCall.isLoading}
-				checkboxSelection={false}
+				checkboxSelection={selection}
 				disableSelectionOnClick
 				getRowId={row => row.esId}
 				experimentalFeatures={{ newEditingApi: true }}
 				sx={{
 					'& .column--header--theme': {
 						backgroundColor: '#d4d4d5'
-					}
+					},
+					'& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer':
+						{
+							display: 'none'
+						}
 				}}
 				paginationMode="server"
 				filterMode="server"
