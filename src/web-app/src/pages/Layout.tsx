@@ -19,6 +19,7 @@ import MoreLikeThisPage from './MoreLikeThisPage';
 import ProjectsPage from './ProjectsPage';
 import OpportunitiesPage from './OpportunitiesPage';
 import SearchByPhrasePage from './SearchByPhrasePage';
+import SearchByOpportunityPage from './SearchByOpportunityPage';
 
 /**
  * Layout component
@@ -46,6 +47,10 @@ const Layout: FC = () => {
 					<Route path="/" element={<Home />} />
 					<Route path="/search" element={<Search />} />
 					<Route path="/projectSearch" element={<SearchByProjectPage />} />
+					<Route
+						path="/opportunitySearch"
+						element={<SearchByOpportunityPage />}
+					/>
 					<Route
 						path="/personSearch"
 						element={<SearchByProjectAuthorsPage />}
