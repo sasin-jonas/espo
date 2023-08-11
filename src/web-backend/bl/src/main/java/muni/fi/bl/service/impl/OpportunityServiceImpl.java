@@ -7,10 +7,10 @@ import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import lombok.extern.slf4j.Slf4j;
+import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.config.ApiConfigProperties;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
-import muni.fi.bl.service.ElasticLoaderAccessorService;
 import muni.fi.bl.service.OpportunityService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,13 +30,13 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     private final ElasticsearchClient elasticsearchClient;
     private final RestTemplate restTemplate;
-    private final ElasticLoaderAccessorService elasticLoaderAccessor;
+    private final ElasticLoaderAccessor elasticLoaderAccessor;
 
     private final String exampleCsvUrl;
 
     public OpportunityServiceImpl(ElasticsearchClient elasticsearchClient,
                                   RestTemplate restTemplate,
-                                  ElasticLoaderAccessorService elasticLoaderAccessor,
+                                  ElasticLoaderAccessor elasticLoaderAccessor,
                                   ApiConfigProperties apiConfigProperties) {
         this.elasticsearchClient = elasticsearchClient;
         this.restTemplate = restTemplate;

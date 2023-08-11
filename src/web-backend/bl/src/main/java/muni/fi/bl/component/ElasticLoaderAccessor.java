@@ -1,26 +1,25 @@
-package muni.fi.bl.service.impl;
+package muni.fi.bl.component;
 
 import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.config.ApiConfigProperties;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
-import muni.fi.bl.service.ElasticLoaderAccessorService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-@Service
+@Component
 @Slf4j
-public class ElasticLoaderAccessorServiceImpl implements ElasticLoaderAccessorService {
+public class ElasticLoaderAccessor {
 
     public static final String DATA_UPLOAD_ERROR = "Error while uploading data to Elasticsearch";
 
@@ -28,14 +27,22 @@ public class ElasticLoaderAccessorServiceImpl implements ElasticLoaderAccessorSe
 
     private final String dataLoaderUrl;
 
-    public ElasticLoaderAccessorServiceImpl(RestTemplate restTemplate,
-                                            ApiConfigProperties apiConfigProperties) {
+    public ElasticLoaderAccessor(RestTemplate restTemplate,
+                                 ApiConfigProperties apiConfigProperties) {
         this.restTemplate = restTemplate;
         dataLoaderUrl = String.format("%s:%s",
                 apiConfigProperties.getDataLoaderUrl(), apiConfigProperties.getDataLoaderPort());
     }
 
-    @Override
+    /**
+     * Loads opportunities to ElasticSearch index
+     *
+     * @param fileName    Source file name
+     * @param data        Source file data
+     * @param endpointUri Loader endpoint to send the data to (e.g. "/load")
+     * @return Load response message
+     * @throws muni.fi.bl.exceptions.ConnectionException When connection with Elastic fails
+     */
     public String sendDataToElasticLoader(String fileName, byte[] data, String endpointUri) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
