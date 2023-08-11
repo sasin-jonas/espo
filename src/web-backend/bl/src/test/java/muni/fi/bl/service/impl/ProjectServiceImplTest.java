@@ -1,5 +1,7 @@
 package muni.fi.bl.service.impl;
 
+import muni.fi.bl.ProjectLoadResult;
+import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
 import muni.fi.bl.exceptions.NotFoundException;
 import muni.fi.bl.mappers.ProjectMapper;
@@ -44,6 +46,8 @@ import static org.mockito.MockitoAnnotations.openMocks;
 
 class ProjectServiceImplTest {
 
+    public static final String DUMMY_FILENAME = "fileName";
+    
     @Mock
     private ProjectRepository projectRepositoryMock;
     @Mock
@@ -56,6 +60,8 @@ class ProjectServiceImplTest {
     private ProjectParser jsonParserMock;
     @Mock
     private ProjectMapper projectMapperMock;
+    @Mock
+    private ElasticLoaderAccessor elasticLoaderAccessor;
 
     @Captor
     private ArgumentCaptor<Specification<Project>> specificationCaptor;
@@ -74,7 +80,7 @@ class ProjectServiceImplTest {
         openMocks(this);
 
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                Mappers.getMapper(ProjectMapper.class), csvParserMock, jsonParserMock);
+                Mappers.getMapper(ProjectMapper.class), csvParserMock, jsonParserMock, elasticLoaderAccessor);
 
         Author author1 = new Author("John Doe", "123456", "student");
         Author author2 = new Author("Jenna Doe", "654321", "employee");
@@ -110,7 +116,7 @@ class ProjectServiceImplTest {
         when(csvParserMock.parseProjects(any())).thenReturn(loadResult);
 
         // tested method
-        ProjectLoadResult result = projectService.loadProjectsFromCsv(InputStream.nullInputStream());
+        ProjectLoadResult result = projectService.loadProjectsFromCsv(InputStream.nullInputStream(), DUMMY_FILENAME);
 
         // verify
         assertThat(result, equalTo(loadResult));
@@ -130,7 +136,7 @@ class ProjectServiceImplTest {
         when(jsonParserMock.parseProjects(any())).thenReturn(loadResult);
 
         // tested method
-        ProjectLoadResult result = projectService.loadProjectsFromJson(InputStream.nullInputStream());
+        ProjectLoadResult result = projectService.loadProjectsFromJson(InputStream.nullInputStream(), DUMMY_FILENAME);
 
         // verify
         assertThat(result, equalTo(loadResult));
@@ -174,7 +180,7 @@ class ProjectServiceImplTest {
     void getById() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock);
+                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
         when(projectRepositoryMock.findById(eq(1L))).thenReturn(Optional.of(project1));
 
         // tested method
@@ -201,7 +207,7 @@ class ProjectServiceImplTest {
     void getByAuthorUco() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock);
+                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
         List<Project> projects = List.of(this.project1, project2);
         when(projectRepositoryMock.findByAuthorUco(eq("uco"))).thenReturn(projects);
 
@@ -256,7 +262,7 @@ class ProjectServiceImplTest {
         when(projectMapperMock.toDto(any())).thenReturn(dto);
         when(projectMapperMock.toEntity(any())).thenReturn(entity);
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock);
+                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
         ProjectUpdateDto updateDto = new ProjectUpdateDto("id", "regCode", "title", new AuthorDto(),
                 "role", new DepartmentDto(), "annotation");
 

@@ -1,6 +1,6 @@
 package muni.fi.bl.service;
 
-import muni.fi.bl.service.impl.ProjectLoadResult;
+import muni.fi.bl.ProjectLoadResult;
 import muni.fi.dtos.ProjectDto;
 import muni.fi.dtos.ProjectUpdateDto;
 import org.springframework.data.domain.Page;
@@ -13,18 +13,20 @@ public interface ProjectService {
     /**
      * Loads projects from CSV represented as an inputStream
      *
-     * @param csvFile InputStream containing CSV data
+     * @param csvFile          InputStream containing CSV data
+     * @param originalFilename The CSV file name
      * @return Result of the projects parsing. Contains information about the number of successfully parsed projects and other data
      */
-    ProjectLoadResult loadProjectsFromCsv(InputStream csvFile);
+    ProjectLoadResult loadProjectsFromCsv(InputStream csvFile, String originalFilename);
 
     /**
      * Loads projects from JSON represented as an inputStream
      *
-     * @param jsonFile InputStream containing JSON data
+     * @param jsonFile         InputStream containing JSON data
+     * @param originalFilename The JSON file name
      * @return Result of the projects parsing. Contains information about the number of successfully parsed projects and other data
      */
-    ProjectLoadResult loadProjectsFromJson(InputStream jsonFile);
+    ProjectLoadResult loadProjectsFromJson(InputStream jsonFile, String originalFilename);
 
     /**
      * Used for retrieving projects. Can be paged, filtered, sorted

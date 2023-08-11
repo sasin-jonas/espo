@@ -1,4 +1,4 @@
-package muni.fi.bl.service.impl;
+package muni.fi.bl;
 
 import muni.fi.dal.entity.Project;
 

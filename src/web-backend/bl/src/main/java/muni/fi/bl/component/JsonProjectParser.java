@@ -1,8 +1,8 @@
 package muni.fi.bl.component;
 
 import lombok.extern.slf4j.Slf4j;
+import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.exceptions.AppException;
-import muni.fi.bl.service.impl.ProjectLoadResult;
 import muni.fi.dal.entity.Author;
 import muni.fi.dal.entity.Department;
 import muni.fi.dal.entity.Project;
