@@ -140,6 +140,10 @@ class EsDataLoader:
 
                 data_line = {k: v.strip() for k, v in data_line.items()}
 
+                # only load data in English
+                if data_line.pop("annotationLanguage").lower() != "en":
+                    continue
+
                 EsDataLoader.parse_as_integer(data_line, "Id")
 
                 action = {

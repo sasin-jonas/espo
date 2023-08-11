@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.service.ProjectService;
-import muni.fi.bl.service.impl.ProjectLoadResult;
 import muni.fi.dtos.ProjectDto;
 import muni.fi.dtos.ProjectUpdateDto;
 import org.apache.commons.io.FilenameUtils;
@@ -123,7 +123,7 @@ public class ProjectController {
         log.info("Uploading MU projects from file {}", importFile.getOriginalFilename());
         String fileExtension = FilenameUtils.getExtension(importFile.getOriginalFilename());
         InputStream inputStream = getInputStream(importFile);
-        return upload(fileExtension, inputStream);
+        return upload(fileExtension, inputStream, importFile.getOriginalFilename());
     }
 
     @Operation(summary = "Upload and replace all existing MU projects from a file")
@@ -137,7 +137,7 @@ public class ProjectController {
         String fileExtension = FilenameUtils.getExtension(importFile.getOriginalFilename());
         InputStream inputStream = getInputStream(importFile);
         projectService.deleteAll();
-        return upload(fileExtension, inputStream);
+        return upload(fileExtension, inputStream, importFile.getOriginalFilename());
     }
 
     @Operation(summary = "Download an example CSV file for MU projects")
@@ -172,11 +172,11 @@ public class ProjectController {
         return inputStream;
     }
 
-    private String upload(String fileExtension, InputStream inputStream) {
+    private String upload(String fileExtension, InputStream inputStream, String originalFilename) {
         if (Objects.equals(fileExtension, JSON)) {
-            return getSuccessMessage(projectService.loadProjectsFromJson(inputStream));
+            return getSuccessMessage(projectService.loadProjectsFromJson(inputStream, originalFilename));
         } else if (Objects.equals(fileExtension, CSV)) {
-            return getSuccessMessage(projectService.loadProjectsFromCsv(inputStream));
+            return getSuccessMessage(projectService.loadProjectsFromCsv(inputStream, originalFilename));
         } else {
             String message = "Invalid file extension, please use csv or json";
             log.warn(message);

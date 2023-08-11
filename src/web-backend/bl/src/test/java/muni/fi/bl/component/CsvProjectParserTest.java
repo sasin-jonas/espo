@@ -1,6 +1,6 @@
 package muni.fi.bl.component;
 
-import muni.fi.bl.service.impl.ProjectLoadResult;
+import muni.fi.bl.ProjectLoadResult;
 import muni.fi.dal.entity.Project;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;

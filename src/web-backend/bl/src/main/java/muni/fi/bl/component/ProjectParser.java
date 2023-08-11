@@ -1,6 +1,6 @@
 package muni.fi.bl.component;
 
-import muni.fi.bl.service.impl.ProjectLoadResult;
+import muni.fi.bl.ProjectLoadResult;
 
 import java.io.InputStream;
 

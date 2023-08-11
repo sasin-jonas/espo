@@ -1,7 +1,10 @@
 package muni.fi.bl.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import muni.fi.bl.ProjectLoadResult;
+import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
+import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.NotFoundException;
 import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
@@ -25,6 +28,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
@@ -33,12 +39,15 @@ import java.util.Optional;
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
 
+    public static final String UPLOAD_ENDPOINT = "/loadMuProjects";
+
     private final ProjectRepository projectRepository;
     private final AuthorRepository authorRepository;
     private final DepartmentRepository departmentRepository;
     private final ProjectMapper projectMapper;
     private final ProjectParser csvParser;
     private final ProjectParser jsonParser;
+    private final ElasticLoaderAccessor elasticLoaderAccessor;
 
     @Autowired
     public ProjectServiceImpl(ProjectRepository projectRepository,
@@ -46,29 +55,31 @@ public class ProjectServiceImpl implements ProjectService {
                               DepartmentRepository departmentRepository,
                               ProjectMapper projectMapper,
                               @Qualifier("csvParser") ProjectParser csvParser,
-                              @Qualifier("jsonParser") ProjectParser jsonParser) {
+                              @Qualifier("jsonParser") ProjectParser jsonParser,
+                              ElasticLoaderAccessor elasticLoaderAccessor) {
         this.projectRepository = projectRepository;
         this.authorRepository = authorRepository;
         this.departmentRepository = departmentRepository;
         this.projectMapper = projectMapper;
         this.jsonParser = jsonParser;
         this.csvParser = csvParser;
+        this.elasticLoaderAccessor = elasticLoaderAccessor;
     }
 
     @Override
     @Transactional
-    public ProjectLoadResult loadProjectsFromCsv(InputStream stream) {
+    public ProjectLoadResult loadProjectsFromCsv(InputStream stream, String originalFilename) {
         log.info("Loading projects from csv");
 
-        return loadProjects(csvParser, stream);
+        return loadProjects(csvParser, stream, originalFilename);
     }
 
     @Override
     @Transactional
-    public ProjectLoadResult loadProjectsFromJson(InputStream jsonFile) {
+    public ProjectLoadResult loadProjectsFromJson(InputStream jsonFile, String originalFilename) {
         log.info("Loading projects from json");
 
-        return loadProjects(jsonParser, jsonFile);
+        return loadProjects(jsonParser, jsonFile, originalFilename);
     }
 
     @Override
@@ -168,11 +179,26 @@ public class ProjectServiceImpl implements ProjectService {
         return jsonParser.getSample();
     }
 
-    private ProjectLoadResult loadProjects(ProjectParser parser, InputStream stream) {
-        ProjectLoadResult result = parser.parseProjects(stream);
+    private ProjectLoadResult loadProjects(ProjectParser parser, InputStream stream, String originalFilename) {
+        ByteArrayOutputStream copyStream = new ByteArrayOutputStream();
+        try {
+            stream.transferTo(copyStream);
+            stream.close();
+        } catch (IOException e) {
+            log.info("Failed to read CSV data", e);
+            throw new AppException("Failed to read CSV data", e);
+        }
+        InputStream projectsStreamCopy = new ByteArrayInputStream(copyStream.toByteArray());
+        ProjectLoadResult result = parser.parseProjects(projectsStreamCopy);
         for (Project project : result.projects()) {
             setProjectDetails(project);
             projectRepository.save(project);
+        }
+        elasticLoaderAccessor.sendDataToElasticLoader(originalFilename, copyStream.toByteArray(), UPLOAD_ENDPOINT);
+        try {
+            copyStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to close input stream", e);
         }
         return result;
     }

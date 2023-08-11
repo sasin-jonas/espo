@@ -13,6 +13,7 @@ es_schema_ch: Dict[str, Any] = {
             }
         },
         "mappings": {
+            "dynamic": False,
             "properties": {
                 "helix": {
                     "type": "keyword"
@@ -68,6 +69,7 @@ es_schema_mu: Dict[str, Any] = {
             }
         },
         "mappings": {
+            "dynamic": False,
             "properties": {
                 "regCode": {
                     "type": "keyword"

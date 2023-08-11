@@ -39,7 +39,7 @@ def upload_mu_data() -> str:
 
     es_client: Elasticsearch = Elasticsearch([elastic_config])
     es: EsDataLoader = EsDataLoader(es_client)
-    upload_result: EsUploadResult = es.load_ch_csv_data(f)
+    upload_result: EsUploadResult = es.load_mu_csv_data(f)
     es_client.close()
     return "Successfully processed {}/{} records ({} failed)".format(
         upload_result.successful, upload_result.total, upload_result.failed)
