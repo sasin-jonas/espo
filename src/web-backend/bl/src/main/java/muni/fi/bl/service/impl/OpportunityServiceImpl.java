@@ -25,7 +25,7 @@ import static muni.fi.bl.service.impl.ElasticSearchService.CROWDHELIX_INDEX;
 @Service
 public class OpportunityServiceImpl implements OpportunityService {
 
-    public static final String UPLOAD_URL = "/load";
+    public static final String UPLOAD_URL = "/loadCrowdhelixData";
     public static final String EXAMPLE_CSV_URL = "/example-csv";
 
     private final ElasticsearchClient elasticsearchClient;
