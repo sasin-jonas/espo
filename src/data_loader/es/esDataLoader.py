@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 from elasticsearch import helpers, Elasticsearch
 from werkzeug.datastructures import FileStorage
 
-from es.esConfig import es_schema
+from es.esConfig import es_schema_ch, es_schema_mu
 from es.esUploadResult import EsUploadResult
 
 logger = logging.getLogger(__name__)
@@ -24,28 +24,50 @@ class EsDataLoader:
     def __init__(self, es: Elasticsearch):
         self.es: Elasticsearch = es
 
-    def load_csv_data(self, file: FileStorage) -> EsUploadResult:
+    def load_ch_csv_data(self, file: FileStorage) -> EsUploadResult:
         """
-        Loads data from a CSV file into Elasticsearch.
+        Loads data from a CSV file into Elasticsearch crowdhelix index.
 
         Args:
             file (FileStorage): The CSV file to upload.
         Returns:
             EsUploadResult: An object representing the result of the upload.
         """
-        self.create_index(es_schema.get('index'), es_schema.get('es'))
+        self.create_index(es_schema_ch.get('index'), es_schema_ch.get('es'))
 
         stream = io.StringIO(file.stream.read().decode(), newline=None)
         csv_reader = csv.DictReader(stream, delimiter=';')
-        upload_result = self.create_bulk_request(csv_reader, es_schema.get('index'))
+        upload_result = self.create_bulk_request(csv_reader, es_schema_ch.get('index'))
 
+        self.load_to_elastic(upload_result)
+
+        return upload_result
+
+    def load_mu_csv_data(self, file: FileStorage) -> EsUploadResult:
+        """
+        Loads data from a CSV file into Elasticsearch MU data index.
+
+        Args:
+            file (FileStorage): The CSV file to upload.
+        Returns:
+            EsUploadResult: An object representing the result of the upload.
+        """
+        self.create_index(es_schema_mu.get('index'), es_schema_mu.get('es'))
+
+        stream = io.StringIO(file.stream.read().decode(), newline=None)
+        csv_reader = csv.DictReader(stream, delimiter=';')
+        upload_result = self.create_mu_bulk_request(csv_reader, es_schema_mu.get('index'))
+
+        self.load_to_elastic(upload_result)
+
+        return upload_result
+
+    def load_to_elastic(self, upload_result):
         if len(upload_result.actions) > 0:
             # (successful, unsuccessful)
             stats: tuple[int, int] = helpers.bulk(self.es, upload_result.actions, stats_only=True)
             upload_result.successful = upload_result.successful - stats[1]
             upload_result.failed = upload_result.failed + stats[1]
-
-        return upload_result
 
     def create_index(self, index: str, config: Dict[str, Any]) -> None:
         """
@@ -98,6 +120,42 @@ class EsDataLoader:
         return EsUploadResult(line_count + failed, line_count, failed, actions)
 
     @staticmethod
+    def create_mu_bulk_request(csv_reader: csv.DictReader, index: str) -> EsUploadResult:
+        """
+        Creates a bulk request for uploading data to Elasticsearch.
+
+        Args:
+           csv_reader (csv.DictReader): A DictReader instance for the CSV data.
+           index: str: The name of the Elastic index.
+        Returns:
+           EsUploadResult: An object representing the result of the upload.
+        """
+        actions: List[Dict[str, Any]] = []
+        line_count: int = 0
+        failed: int = 0
+        for data_line in csv_reader:
+            try:
+                if line_count == 0:
+                    logger.info(f'Column names are {", ".join(data_line)}')
+
+                data_line = {k: v.strip() for k, v in data_line.items()}
+
+                EsDataLoader.parse_as_integer(data_line, "Id")
+
+                action = {
+                    "_index": index,
+                    "_id": str(uuid.uuid4()),
+                    "_source": data_line
+                }
+                actions.append(action)
+                line_count += 1
+            except Exception:
+                failed += 1
+                logger.exception(f"failed to process {data_line}")
+        logger.info(f'Processed {line_count} lines.')
+        return EsUploadResult(line_count + failed, line_count, failed, actions)
+
+    @staticmethod
     def parse_as_integer(data: Dict[str, Any], field: str) -> None:
         """
         Parses a field as an integer.
@@ -109,10 +167,10 @@ class EsDataLoader:
             None: This method modifies the given dictionary in place.
         """
         string: str = data.pop(field)
-        data["ID"] = int(string)
+        data[field] = int(string)
 
     @staticmethod
-    def parse_as_keywords(data: Dict[str, Any], field: str) -> None:
+    def parse_as_keywords(data: Dict[str, Any], field: str, delimiter=",") -> None:
         """
         Parse a string value in the given field of the given dictionary as a list of keywords.
 
@@ -127,9 +185,12 @@ class EsDataLoader:
             parse_as_keywords(item, "interests")
             print(item)
             {"name": "John", "interests": ["reading", "writing", "coding"]}
+            :param field: field name
+            :param data: the whole data item
+            :param delimiter: delimiter of keywords
         """
         string: str = data.pop(field)
         keywords: List[str] = []
-        for h in string.split(","):
+        for h in string.split(delimiter):
             keywords.append(h.strip())
         data[field] = keywords

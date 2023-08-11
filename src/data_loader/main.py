@@ -9,19 +9,37 @@ from es.esUploadResult import EsUploadResult
 app: Flask = Flask(__name__)
 
 
-@app.route('/load', methods=['POST'])
-def upload_data() -> str:
+@app.route('/loadCrowdhelixData', methods=['POST'])
+def upload_ch_data() -> str:
     """
-    Uploads CSV data to Elasticsearch.
+    Uploads Crowdhelix CSV data to Elasticsearch.
     """
 
     f: FileStorage = request.files['file']
     if not f:
-        return "No file"
+        return "No file detected"
 
     es_client: Elasticsearch = Elasticsearch([elastic_config])
     es: EsDataLoader = EsDataLoader(es_client)
-    upload_result: EsUploadResult = es.load_csv_data(f)
+    upload_result: EsUploadResult = es.load_ch_csv_data(f)
+    es_client.close()
+    return "Successfully processed {}/{} records ({} failed)".format(
+        upload_result.successful, upload_result.total, upload_result.failed)
+
+
+@app.route('/loadMuProjects', methods=['POST'])
+def upload_mu_data() -> str:
+    """
+    Uploads MU CSV data to Elasticsearch.
+    """
+
+    f: FileStorage = request.files['file']
+    if not f:
+        return "No file detected"
+
+    es_client: Elasticsearch = Elasticsearch([elastic_config])
+    es: EsDataLoader = EsDataLoader(es_client)
+    upload_result: EsUploadResult = es.load_ch_csv_data(f)
     es_client.close()
     return "Successfully processed {}/{} records ({} failed)".format(
         upload_result.successful, upload_result.total, upload_result.failed)

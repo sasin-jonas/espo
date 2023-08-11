@@ -2,7 +2,7 @@ import os
 from typing import Dict, Any
 
 # Schema for the Elastic index for Crowdhelix data
-es_schema: Dict[str, Any] = {
+es_schema_ch: Dict[str, Any] = {
     "index": "crowdhelix_data",
     "lang": "en",
     "es": {
@@ -49,6 +49,43 @@ es_schema: Dict[str, Any] = {
                     "type": "keyword"
                 },
                 "ID": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
+
+# Schema for the Elastic index for MU data
+es_schema_mu: Dict[str, Any] = {
+    "index": "mu_data",
+    "lang": "en",
+    "es": {
+        "settings": {
+            "index": {
+                "number_of_shards": "1",
+                "number_of_replicas": "0",
+            }
+        },
+        "mappings": {
+            "properties": {
+                "regCode": {
+                    "type": "keyword"
+                },
+                "title": {
+                    "type": "text",
+                    "term_vector": "yes",
+                    "analyzer": "english"
+                },
+                "annotation": {
+                    "type": "text",
+                    "term_vector": "yes",
+                    "analyzer": "english"
+                },
+                "uco": {
+                    "type": "keyword"
+                },
+                "Id": {
                     "type": "integer"
                 }
             }
