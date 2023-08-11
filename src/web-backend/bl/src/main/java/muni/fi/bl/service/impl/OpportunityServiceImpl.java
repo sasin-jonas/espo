@@ -8,21 +8,12 @@ import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.config.ApiConfigProperties;
-import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
+import muni.fi.bl.service.ElasticLoaderAccessorService;
 import muni.fi.bl.service.OpportunityService;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -37,22 +28,20 @@ public class OpportunityServiceImpl implements OpportunityService {
     public static final String UPLOAD_URL = "/load";
     public static final String EXAMPLE_CSV_URL = "/example-csv";
 
-    public static final String DATA_UPLOAD_ERROR = "Error while uploading data to Elasticsearch";
-
     private final ElasticsearchClient elasticsearchClient;
     private final RestTemplate restTemplate;
+    private final ElasticLoaderAccessorService elasticLoaderAccessor;
 
-    private final String uploadOpportunitiesUrl;
     private final String exampleCsvUrl;
 
     public OpportunityServiceImpl(ElasticsearchClient elasticsearchClient,
                                   RestTemplate restTemplate,
+                                  ElasticLoaderAccessorService elasticLoaderAccessor,
                                   ApiConfigProperties apiConfigProperties) {
         this.elasticsearchClient = elasticsearchClient;
         this.restTemplate = restTemplate;
+        this.elasticLoaderAccessor = elasticLoaderAccessor;
 
-        uploadOpportunitiesUrl = String.format("%s:%s%s",
-                apiConfigProperties.getDataLoaderUrl(), apiConfigProperties.getDataLoaderPort(), UPLOAD_URL);
         exampleCsvUrl = String.format("%s:%s%s",
                 apiConfigProperties.getDataLoaderUrl(), apiConfigProperties.getDataLoaderPort(), EXAMPLE_CSV_URL);
     }
@@ -92,31 +81,7 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     @Override
     public String load(String fileName, byte[] data) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(data) {
-            @Override
-            public String getFilename() {
-                return fileName;
-            }
-        });
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> response;
-        try {
-            response = restTemplate.exchange(uploadOpportunitiesUrl, HttpMethod.POST, requestEntity, String.class);
-        } catch (HttpClientErrorException e) {
-            log.error(DATA_UPLOAD_ERROR, e);
-            throw new ConnectionException(DATA_UPLOAD_ERROR, e);
-        } catch (HttpServerErrorException e) {
-            log.error(DATA_UPLOAD_ERROR, e);
-            throw new AppException(DATA_UPLOAD_ERROR + ". File format might be invalid", e);
-        }
-
-        return response.getBody();
+        return elasticLoaderAccessor.sendDataToElasticLoader(fileName, data, UPLOAD_URL);
     }
 
     @Override
