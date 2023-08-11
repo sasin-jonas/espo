@@ -1,9 +1,8 @@
-package muni.fi.bl.service.impl;
+package muni.fi.bl.component;
 
 import muni.fi.bl.config.ApiConfigProperties;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
-import muni.fi.bl.service.ElasticLoaderAccessorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
-import static muni.fi.bl.service.impl.ElasticLoaderAccessorServiceImpl.DATA_UPLOAD_ERROR;
+import static muni.fi.bl.component.ElasticLoaderAccessor.DATA_UPLOAD_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 
-class ElasticLoaderAccessorServiceImplTest {
+class ElasticLoaderAccessorTest {
 
     private static final String FILE_NAME = "file.csv";
     private static final byte[] DATA = "DATA".getBytes(StandardCharsets.UTF_8);
@@ -52,7 +51,7 @@ class ElasticLoaderAccessorServiceImplTest {
     private ArgumentCaptor<HttpEntity<MultiValueMap<String, Object>>> httpRequestCaptor;
 
     // tested class
-    private ElasticLoaderAccessorService elasticLoaderAccessor;
+    private ElasticLoaderAccessor elasticLoaderAccessor;
 
     @BeforeEach
     void setUp() {
@@ -60,7 +59,7 @@ class ElasticLoaderAccessorServiceImplTest {
 
         when(apiConfigPropertiesMock.getDataLoaderUrl()).thenReturn(LOADER_URL);
         when(apiConfigPropertiesMock.getDataLoaderPort()).thenReturn(LOADER_PORT);
-        elasticLoaderAccessor = new ElasticLoaderAccessorServiceImpl(restTemplateMock, apiConfigPropertiesMock);
+        elasticLoaderAccessor = new ElasticLoaderAccessor(restTemplateMock, apiConfigPropertiesMock);
     }
 
     @Test

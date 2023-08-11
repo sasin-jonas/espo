@@ -7,10 +7,10 @@ import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
+import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.config.ApiConfigProperties;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
-import muni.fi.bl.service.ElasticLoaderAccessorService;
 import muni.fi.bl.service.OpportunityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class OpportunityServiceImplTest {
     @Mock
     private ApiConfigProperties apiConfigPropertiesMock;
     @Mock
-    private ElasticLoaderAccessorService elasticLoaderAccessor;
+    private ElasticLoaderAccessor elasticLoaderAccessor;
 
     @Mock
     private ElasticsearchIndicesClient elasticsearchIndicesClientMock;
