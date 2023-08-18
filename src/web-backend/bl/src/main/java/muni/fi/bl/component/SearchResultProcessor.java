@@ -1,7 +1,7 @@
 package muni.fi.bl.component;
 
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import muni.fi.dtos.OpportunityDto;
+import muni.fi.dtos.BaseEsDto;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import static muni.fi.bl.service.impl.ElasticSearchService.TITLE_FIELD;
  * Used for aggregating and processing the ElasticSearch search results
  */
 @Component
-public class SearchResultProcessor {
+public class SearchResultProcessor<T extends BaseEsDto> {
 
     public static final int TITLE_SCORE_COEFFICIENT = 2;
 
@@ -26,23 +26,23 @@ public class SearchResultProcessor {
      * other key values are not checked.
      *
      * @param topResultsMap map of result lists acquired by searches
-     * @return list of opportunities ranked by the aggregated score
+     * @return list of results ranked by the aggregated score
      */
-    public List<OpportunityDto> aggregateResultsByScore(Map<String, List<Hit<OpportunityDto>>> topResultsMap) {
-        List<OpportunityDto> topDocs = getHitsWithScoreAndSource(topResultsMap);
+    public List<T> aggregateResultsByScore(Map<String, List<Hit<T>>> topResultsMap) {
+        List<T> topDocs = getHitsWithScoreAndSource(topResultsMap);
 
-        Set<OpportunityDto> topHitsAgg = new HashSet<>();
-        for (var opportunity : topDocs) {
+        Set<T> topHitsAgg = new HashSet<>();
+        for (var result : topDocs) {
             var foundOpt = topHitsAgg.stream()
                     .filter(h ->
-                            h.getId().equals(opportunity.getId()))
+                            h.getEsId().equals(result.getEsId()))
                     .findFirst();
             if (foundOpt.isPresent()) {
                 var found = foundOpt.get();
-                found.setScore(found.getScore() + opportunity.getScore());
+                found.setScore(found.getScore() + result.getScore());
                 found.setHitSource("doc and title");
             } else {
-                topHitsAgg.add(opportunity);
+                topHitsAgg.add(result);
             }
         }
         return sortAndRank(topHitsAgg.stream().toList());
@@ -54,12 +54,12 @@ public class SearchResultProcessor {
      *
      * @param topResults  the list of search results
      * @param searchHints the list of recommendations (hints) to support result ordering
-     * @return list of opportunities reordered and ranked based on the aggregated score
+     * @return list of results reordered and ranked based on the aggregated score
      */
-    public List<OpportunityDto> aggregateResultsAndRecommendations(List<OpportunityDto> topResults, List<OpportunityDto> searchHints) {
+    public List<T> aggregateResultsAndRecommendations(List<T> topResults, List<T> searchHints) {
         for (var result : topResults) {
             for (var recommendation : searchHints) {
-                if (result.getId().equals(recommendation.getId())) {
+                if (result.getEsId().equals(recommendation.getEsId())) {
                     result.setScore(result.getScore() + recommendation.getScore());
                     result.setHitSource(result.getHitSource() + " (+recommendation)");
                 }
@@ -68,11 +68,11 @@ public class SearchResultProcessor {
         return sortAndRank(topResults);
     }
 
-    private List<OpportunityDto> getHitsWithScoreAndSource(Map<String, List<Hit<OpportunityDto>>> topResultsMap) {
-        List<OpportunityDto> topHits = new ArrayList<>();
+    private List<T> getHitsWithScoreAndSource(Map<String, List<Hit<T>>> topResultsMap) {
+        List<T> topHits = new ArrayList<>();
         for (var entry : topResultsMap.entrySet()) {
             for (var hit : entry.getValue()) {
-                OpportunityDto doc = hit.source();
+                T doc = hit.source();
                 if (doc != null && hit.score() != null) {
                     if (entry.getKey().equals(TITLE_FIELD)) {
                         doc.setScore(hit.score() * TITLE_SCORE_COEFFICIENT);
@@ -88,8 +88,8 @@ public class SearchResultProcessor {
         return topHits;
     }
 
-    private List<OpportunityDto> sortAndRank(List<OpportunityDto> topHitsAgg) {
-        List<OpportunityDto> topResultsSorted = topHitsAgg.stream()
+    private List<T> sortAndRank(List<T> topHitsAgg) {
+        List<T> topResultsSorted = topHitsAgg.stream()
                 .filter(h -> h.getScore() != null)
                 .sorted((s1, s2) -> Double.compare(s2.getScore(), s1.getScore()))
                 .toList();

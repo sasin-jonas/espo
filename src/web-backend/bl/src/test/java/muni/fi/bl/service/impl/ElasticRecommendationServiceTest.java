@@ -55,7 +55,7 @@ class ElasticRecommendationServiceTest {
     @Mock
     private ElasticsearchClient elasticsearchClientMock;
     @Mock
-    private SearchResultProcessor resultProcessorMock;
+    private SearchResultProcessor<OpportunityDto> resultProcessorMock;
     @Mock
     private QueryBuilder queryBuilderMock;
 
@@ -115,7 +115,7 @@ class ElasticRecommendationServiceTest {
                         .document(d -> d
                                 .index(someIndex)
                                 .id("someId")))));
-        when(queryBuilderMock.getMoreLikeThisQuery(anyString())).thenReturn(MoreLikeThisQuery.of(b -> b
+        when(queryBuilderMock.getMoreLikeThisQuery(anyString(), CROWDHELIX_INDEX)).thenReturn(MoreLikeThisQuery.of(b -> b
                 .like(l -> l
                         .document(d -> d
                                 .index(someIndex)
@@ -183,7 +183,7 @@ class ElasticRecommendationServiceTest {
         assertThat(opportunityDtos.get(0).getScore(), equalTo(20.0));
         assertThat(opportunityDtos.get(1).getScore(), equalTo(10.0));
 
-        verify(queryBuilderMock, times(1)).getMoreLikeThisQuery(someId);
+        verify(queryBuilderMock, times(1)).getMoreLikeThisQuery(someId, CROWDHELIX_INDEX);
         verify(elasticsearchClientMock, times(1))
                 .search(any(SearchRequest.class), eq(OpportunityDto.class));
         verify(resultProcessorMock, times(1)).aggregateResultsByScore(any());

@@ -79,7 +79,7 @@ es_schema_mu: Dict[str, Any] = {
                     "term_vector": "yes",
                     "analyzer": "english"
                 },
-                "annotation": {
+                "description": {
                     "type": "text",
                     "term_vector": "yes",
                     "analyzer": "english"

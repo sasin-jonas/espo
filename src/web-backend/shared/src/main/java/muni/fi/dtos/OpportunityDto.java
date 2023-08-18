@@ -14,7 +14,7 @@ import java.util.List;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Opportunity data transfer object")
-public class OpportunityDto {
+public class OpportunityDto extends BaseEsDto {
 
     @Schema(description = "Numeric identifier of the opportunity", example = "123")
     @JsonProperty("ID")
@@ -52,17 +52,5 @@ public class OpportunityDto {
     @Schema(description = "List of expertise or skills required for the opportunity", example = "[\"Python\", \"Matlab\", \"Quantum Mechanics\"]")
     @JsonProperty("expertise")
     List<String> expertises;
-
-    @Schema(description = "Score of the opportunity based on search criteria", example = "12.5")
-    Double score;
-
-    @Schema(description = "Based on what the opportunity was found", example = "title + description")
-    String hitSource;
-
-    @Schema(description = "Rank of the opportunity in the search results", example = "1")
-    int rank;
-
-    @Schema(description = "Unique identifier of the opportunity in the search index", example = "abcd-1234")
-    String esId;
 
 }
