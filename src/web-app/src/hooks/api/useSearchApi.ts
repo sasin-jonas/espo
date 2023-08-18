@@ -7,10 +7,14 @@ import {
 	AppAlertTypes,
 	ErrorResponse
 } from '../../types/Alert.Types';
-import { SearchProjectDto } from '../../types/Search.Types';
+import {
+	OpportunitySearchResultDto,
+	SearchProjectDto
+} from '../../types/Search.Types';
 
 import { apiRoutes } from './apiRoutes';
 import { getObjects, postObject } from './useApi';
+import { GridRowId } from '@mui/x-data-grid';
 
 /**
  * Get all filter values
@@ -109,6 +113,41 @@ export const useSearchByAuthors = (
 		{
 			onSuccess: async () => {
 				await qc.invalidateQueries('projectsSearchResult');
+			},
+			onError: error => {
+				setAlertOptions({
+					open: true,
+					error,
+					severity: AppAlertTypes.Error
+				});
+			}
+		}
+	);
+
+/**
+ * Search by opportunities
+ * @param token The bearer token
+ * @param qc The query client
+ * @param setAlertOptions The function for setting the alert options
+ */
+export const useSearchByOpportunity = (
+	token: string,
+	qc: QueryClient,
+	setAlertOptions: (
+		value: ((prevState: AppAlertOptions) => AppAlertOptions) | AppAlertOptions
+	) => void
+) =>
+	useMutation<
+		OpportunitySearchResultDto[],
+		AxiosError<ErrorResponse>,
+		GridRowId
+	>(
+		['opportunitySearchResult'],
+		(r: GridRowId) =>
+			postObject(`${apiRoutes.searchUrl}/byOpportunity`, r, token),
+		{
+			onSuccess: async () => {
+				await qc.invalidateQueries('opportunitySearchResult');
 			},
 			onError: error => {
 				setAlertOptions({

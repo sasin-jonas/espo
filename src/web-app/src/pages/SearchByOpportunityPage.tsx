@@ -5,39 +5,40 @@ import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useQueryClient } from 'react-query';
 
 import usePageTitle from '../hooks/usePageTitle';
-import { OpportunityDto } from '../types/Opportunity.Types';
 import MaxResultsComboBox from '../components/controls/MaxResultsComboBox';
 import SearchButton from '../components/controls/SearchButton';
-import SearchResults from '../components/display/SearchResults';
 import { useAlert } from '../hooks/useAppAlert';
 import OpportunitiesDataGrid from '../components/opportunity/OpportunitiesDataGrid';
+import { OpportunitySearchResultDto } from '../types/Search.Types';
+import OpportunitySearchResults from '../components/display/OpportunitySearchResults';
+import { useSearchByOpportunity } from '../hooks/api/useSearchApi';
 
 /**
  * Search by project page
  * @constructor
  */
-const SearchByProjectPage: FC = () => {
+const SearchByOpportunityPage: FC = () => {
 	// context
 	usePageTitle('Search');
 	const qc = useQueryClient();
 	const [, setAlertOptions] = useAlert();
 	const { token } = useContext<IAuthContext>(AuthContext);
 
-	const [filterValues, setFilterValues] = useState<{ [id: string]: string[] }>(
-		{}
-	);
-
 	// max search results
 	const [maxResults, setMaxResults] = useState<number>(10);
 
-	const [searchData, setSearchData] = useState<OpportunityDto[] | undefined>(
-		undefined
-	);
+	const [searchData, setSearchData] = useState<
+		OpportunitySearchResultDto[] | undefined
+	>(undefined);
 
 	const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 
 	// api calls
-	// const searchByOpportunityCall = useSearchByProjects(token, qc, setAlertOptions);
+	const searchByOpportunityCall = useSearchByOpportunity(
+		token,
+		qc,
+		setAlertOptions
+	);
 
 	// effect hooks and handlers
 	useEffect(() => {
@@ -63,7 +64,21 @@ const SearchByProjectPage: FC = () => {
 	};
 
 	// Submit handler
-	const handleSearch = async () => {};
+	const handleSearch = async () => {
+		if (selectionModel.length === 0) {
+			return;
+		}
+		let searchResult: OpportunitySearchResultDto[];
+		try {
+			searchResult = await searchByOpportunityCall.mutateAsync(
+				selectionModel[0]
+			);
+		} catch {
+			console.error('Failed to perform opportunity search');
+			return;
+		}
+		setSearchData(searchResult);
+	};
 
 	return (
 		<>
@@ -87,9 +102,9 @@ const SearchByProjectPage: FC = () => {
 					/>
 				</Grid>
 			</Grid>
-			{searchData && <SearchResults searchResult={searchData} />}
+			{searchData && <OpportunitySearchResults searchResult={searchData} />}
 		</>
 	);
 };
 
-export default SearchByProjectPage;
+export default SearchByOpportunityPage;

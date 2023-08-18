@@ -1,3 +1,5 @@
+import { AuthorDto, ProjectDto } from './Project.Types';
+
 export type SearchProjectDto = {
 	projIds: number[];
 	ucoList: string[];
@@ -7,4 +9,9 @@ export type SearchProjectDto = {
 	maxResults: number;
 	personalized: boolean;
 	phrase?: string;
+};
+
+export type OpportunitySearchResultDto = {
+	author: AuthorDto;
+	relevantProjects: ProjectDto[];
 };
