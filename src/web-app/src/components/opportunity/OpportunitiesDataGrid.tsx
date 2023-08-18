@@ -36,15 +36,12 @@ import { useAlert } from '../../hooks/useAppAlert';
 import { AppAlertTypes } from '../../types/Alert.Types';
 
 import OpportunityDetail from './OpportunityDetail';
-import { ProjectDto } from '../../types/Project.Types';
+import { GridInputSelectionModel } from '@mui/x-data-grid/models/gridSelectionModel';
 
 type Props = {
-	dataRows?: ProjectDto[];
-	pSize?: number;
-	loading?: boolean;
 	onGridSelectionChange?: (ids: GridSelectionModel) => void;
-	onPageSizeChange?: (size: number) => void;
 	selection: boolean;
+	selectionModel?: GridInputSelectionModel;
 };
 
 /**
@@ -52,12 +49,9 @@ type Props = {
  * @constructor
  */
 const OpportunitiesDataGrid: FC<Props> = ({
-	dataRows,
-	pSize,
-	loading,
 	onGridSelectionChange,
-	onPageSizeChange,
-	selection
+	selection,
+	selectionModel
 }) => {
 	// context
 	const qc = useQueryClient();
@@ -282,10 +276,12 @@ const OpportunitiesDataGrid: FC<Props> = ({
 				pagination
 				page={page}
 				loading={filterOpportunitiesCall.isLoading}
+				onSelectionModelChange={onGridSelectionChange}
 				checkboxSelection={selection}
-				disableSelectionOnClick
 				getRowId={row => row.esId}
 				experimentalFeatures={{ newEditingApi: true }}
+				selectionModel={selectionModel}
+				disableSelectionOnClick
 				sx={{
 					'& .column--header--theme': {
 						backgroundColor: '#d4d4d5'
@@ -298,6 +294,7 @@ const OpportunitiesDataGrid: FC<Props> = ({
 				paginationMode="server"
 				filterMode="server"
 				sortingMode="server"
+				hideFooterSelectedRowCount
 			/>
 		</Box>
 	);

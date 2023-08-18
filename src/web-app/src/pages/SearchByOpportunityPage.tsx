@@ -27,14 +27,14 @@ const SearchByProjectPage: FC = () => {
 		{}
 	);
 
-	// filter values
-	const [selectedRows, setSelectedRows] = useState<number[]>([]);
 	// max search results
 	const [maxResults, setMaxResults] = useState<number>(10);
 
 	const [searchData, setSearchData] = useState<OpportunityDto[] | undefined>(
 		undefined
 	);
+
+	const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 
 	// api calls
 	// const searchByOpportunityCall = useSearchByProjects(token, qc, setAlertOptions);
@@ -52,9 +52,14 @@ const SearchByProjectPage: FC = () => {
 		setMaxResults(isNaN(value) ? 10 : value);
 	}, []);
 
-	const onGridSelectionChange = (ids: GridSelectionModel) => {
-		const selectedIDs = ids.map(id => Number(id)).filter(id => !isNaN(id));
-		setSelectedRows(selectedIDs);
+	const onGridSelectionChange = (selection: GridSelectionModel) => {
+		if (selection.length > 1) {
+			const result = selection.at(selection.length - 1);
+
+			setSelectionModel([result ?? 0]);
+		} else {
+			setSelectionModel(selection);
+		}
 	};
 
 	// Submit handler
@@ -62,7 +67,11 @@ const SearchByProjectPage: FC = () => {
 
 	return (
 		<>
-			<OpportunitiesDataGrid selection />
+			<OpportunitiesDataGrid
+				selection
+				onGridSelectionChange={onGridSelectionChange}
+				selectionModel={selectionModel[0] ?? []}
+			/>
 			<Grid container justifyContent="left" spacing={3}>
 				<Grid item xs={3}>
 					<MaxResultsComboBox
@@ -74,7 +83,7 @@ const SearchByProjectPage: FC = () => {
 				<Grid item xs={3}>
 					<SearchButton
 						onClick={handleSearch}
-						isDisabled={selectedRows.length === 0}
+						isDisabled={selectionModel.length === 0}
 					/>
 				</Grid>
 			</Grid>
