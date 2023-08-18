@@ -68,7 +68,7 @@ public class ElasticRecommendationService implements RecommendationService {
 
     @Override
     public List<OpportunityDto> recommendMoreLikeThis(String id) {
-        return searchForMoreLikeThis(queryBuilder.getMoreLikeThisQuery(id));
+        return searchForMoreLikeThis(queryBuilder.getMoreLikeThisQuery(id, CROWDHELIX_INDEX));
     }
 
     private List<OpportunityDto> searchForMoreLikeThis(MoreLikeThisQuery moreLikeThisQuery) {

@@ -100,7 +100,7 @@ class QueryBuilderTest {
         String elasticId = "someId";
 
         // tested method
-        MoreLikeThisQuery moreLikeThisQuery = queryBuilder.getMoreLikeThisQuery(elasticId);
+        MoreLikeThisQuery moreLikeThisQuery = queryBuilder.getMoreLikeThisQuery(elasticId, CROWDHELIX_INDEX);
 
         // verify
         assertThat("Query has like docs", moreLikeThisQuery.like().size(), equalTo(1));

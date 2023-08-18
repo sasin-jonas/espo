@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.equalTo;
 class SearchResultProcessorTest {
 
     // tested class
-    private final SearchResultProcessor resultProcessor = new SearchResultProcessor();
+    private final SearchResultProcessor<OpportunityDto> resultProcessor = new SearchResultProcessor<>();
 
     @Test
     void aggregateResultsByScoreEmpty() {
@@ -44,13 +44,17 @@ class SearchResultProcessorTest {
         var title2 = new OpportunityDto();
         doc1.setId(1);
         doc2.setId(2);
+        doc1.setEsId("1");
+        doc2.setEsId("2");
         title1.setId(1);
         title2.setId(2);
+        title1.setEsId("1");
+        title2.setEsId("2");
 
-        var docHit1 = new Hit.Builder<OpportunityDto>().source(doc1).score(13.0).index("any").id("any").build();
-        var docHit2 = new Hit.Builder<OpportunityDto>().source(doc2).score(10.0).index("any").id("any").build();
-        var titleHit1 = new Hit.Builder<OpportunityDto>().source(title1).score(2.0).index("any").id("any").build();
-        var titleHit2 = new Hit.Builder<OpportunityDto>().source(title2).score(5.0).index("any").id("any").build();
+        var docHit1 = new Hit.Builder<OpportunityDto>().source(doc1).score(13.0).index("any").id("1").build();
+        var docHit2 = new Hit.Builder<OpportunityDto>().source(doc2).score(10.0).index("any").id("2").build();
+        var titleHit1 = new Hit.Builder<OpportunityDto>().source(title1).score(2.0).index("any").id("1").build();
+        var titleHit2 = new Hit.Builder<OpportunityDto>().source(title2).score(5.0).index("any").id("2").build();
         docHitList.add(docHit1);
         docHitList.add(docHit2);
         titleHitList.add(titleHit1);
@@ -101,18 +105,24 @@ class SearchResultProcessorTest {
         doc1.setId(1);
         doc1.setScore(10.0);
         doc1.setHitSource("any");
+        doc1.setEsId("1");
         doc2.setId(2);
         doc2.setScore(8.0);
         doc2.setHitSource("any");
+        doc2.setEsId("2");
         doc3.setId(3);
         doc3.setScore(7.0);
         doc3.setHitSource("any");
+        doc3.setEsId("3");
         recommendation1.setId(3);
         recommendation1.setScore(6.0);
+        recommendation1.setEsId("3");
         recommendation2.setId(1);
         recommendation2.setScore(2.0);
+        recommendation2.setEsId("1");
         recommendation3.setId(4);
         recommendation3.setScore(8.0);
+        recommendation3.setEsId("4");
 
         searchResults.add(doc1);
         searchResults.add(doc2);

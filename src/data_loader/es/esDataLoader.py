@@ -145,6 +145,7 @@ class EsDataLoader:
                     continue
 
                 EsDataLoader.parse_as_integer(data_line, "Id")
+                EsDataLoader.rename_field(data_line, "annotation", "description")
 
                 action = {
                     "_index": index,
@@ -158,6 +159,22 @@ class EsDataLoader:
                 logger.exception(f"failed to process {data_line}")
         logger.info(f'Processed {line_count} lines.')
         return EsUploadResult(line_count + failed, line_count, failed, actions)
+
+    @staticmethod
+    def rename_field(data: Dict[str, Any], old_name: str, new_name: str) -> None:
+        """
+        Parses a field as an integer.
+
+        Args:
+            data
+            :param data: A dictionary containing the item to parse.
+            :param old_name: The old name of the field
+            :param new_name: The new name of the field
+        Returns:
+            None: This method modifies the given dictionary in place.
+        """
+        string: str = data.pop(old_name)
+        data[new_name] = string
 
     @staticmethod
     def parse_as_integer(data: Dict[str, Any], field: str) -> None:

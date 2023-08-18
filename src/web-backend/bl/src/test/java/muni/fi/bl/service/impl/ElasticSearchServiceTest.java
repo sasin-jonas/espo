@@ -63,7 +63,9 @@ class ElasticSearchServiceTest {
     @Mock
     private ElasticsearchClient elasticsearchClientMock;
     @Mock
-    private SearchResultProcessor resultProcessorMock;
+    private SearchResultProcessor<OpportunityDto> resultProcessorMock;
+    @Mock
+    private SearchResultProcessor<ProjectDto> projectResultProcessor;
     @Mock
     private ProjectService projectServiceMock;
     @Mock
@@ -86,7 +88,7 @@ class ElasticSearchServiceTest {
         openMocks(this);
 
         searchService = new ElasticSearchService(
-                elasticsearchClientMock, resultProcessorMock, projectServiceMock, recommendationServiceMock, queryBuilderMock, textNormalizer);
+                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock, recommendationServiceMock, queryBuilderMock, textNormalizer);
 
         // setup mocks
         AuthorDto authorDto1 = new AuthorDto("John Doe", "123456", "student");

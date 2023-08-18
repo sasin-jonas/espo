@@ -85,14 +85,27 @@ public class QueryBuilder {
      * Creates a moreLikeThisQuery with an elastic document as parameter. The search is performed among 'title'
      * and 'description' fields
      *
-     * @param id The unique identifier of the document in ElasticSearch
+     * @param id    The unique identifier of the document in ElasticSearch
+     * @param index The name of the ElasticSearch index to search in
      * @return The constructed instance of MoreLikeThis query
      */
-    public MoreLikeThisQuery getMoreLikeThisQuery(String id) {
+    public MoreLikeThisQuery getMoreLikeThisQuery(String id, String index) {
+        return getMoreLikeThisQuery(id, List.of(DESCRIPTION_FIELD, TITLE_FIELD), index);
+    }
+
+    /**
+     * Creates a moreLikeThisQuery with an elastic document as parameter. The search is performed among 'title'
+     * and 'description' fields
+     *
+     * @param index The name of the ElasticSearch index to search in
+     * @param id    The unique identifier of the document in ElasticSearch
+     * @return The constructed instance of MoreLikeThis query
+     */
+    public MoreLikeThisQuery getMoreLikeThisQuery(String id, List<String> fields, String index) {
         return MoreLikeThisQuery.of(m -> m
-                .fields(List.of(DESCRIPTION_FIELD, TITLE_FIELD))
+                .fields(fields)
                 .like(
-                        l -> l.document(d -> d.index(CROWDHELIX_INDEX)
+                        l -> l.document(d -> d.index(index)
                                 .id(id))
                 )
                 .maxQueryTerms(MAX_QUERY_TERMS)

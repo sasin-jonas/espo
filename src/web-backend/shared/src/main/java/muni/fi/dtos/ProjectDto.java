@@ -17,7 +17,10 @@ import org.joda.time.DateTime;
 @EqualsAndHashCode(callSuper = true)
 @RequiredArgsConstructor
 @Schema(description = "Project data transfer object")
-public class ProjectDto extends BaseDto {
+public class ProjectDto extends BaseEsDto {
+
+    @Schema(description = "Unique identifier of the entity", example = "123")
+    private Long id;
 
     @Schema(description = "Unique identifier of the project", example = "123")
     private String projId;
