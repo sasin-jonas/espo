@@ -1,6 +1,7 @@
 package muni.fi.bl.service;
 
 import muni.fi.dtos.OpportunityDto;
+import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.query.SearchInfo;
 import org.springframework.data.domain.Page;
 
@@ -34,6 +35,11 @@ public interface SearchService {
      * @throws muni.fi.bl.exceptions.ConnectionException When connection with Elastic fails
      */
     List<OpportunityDto> searchByPhrase(SearchInfo info);
+
+    /**
+     * Search by opportunity for relevant authors and their projects
+     */
+    List<OpportunitySearchResultDto> searchByOpportunity(String opportunityId);
 
     /**
      * Searches for opportunities based on input params. Is used for filtering, paging and sorting

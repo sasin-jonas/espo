@@ -30,7 +30,7 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 		</Grid>
 		<Grid container justifyContent="center" rowSpacing={3} columnSpacing={1}>
 			{searchResult.map(result => (
-				<Grid item container key={result.author.uco}>
+				<Grid item container key={result.authorDto.uco}>
 					<Grid item xs={11}></Grid>
 				</Grid>
 			))}

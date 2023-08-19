@@ -1,6 +1,7 @@
 package muni.fi.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
@@ -60,5 +61,8 @@ public class ProjectDto extends BaseEsDto {
     @JsonIgnore
     @Schema(hidden = true)
     private String processedAnnotation;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String uco;
 
 }

@@ -18,9 +18,11 @@ import muni.fi.bl.component.SearchResultProcessor;
 import muni.fi.bl.component.TextNormalizer;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
+import muni.fi.bl.mappers.AuthorMapper;
 import muni.fi.bl.service.ProjectService;
 import muni.fi.bl.service.RecommendationService;
 import muni.fi.bl.service.SearchService;
+import muni.fi.dal.repository.AuthorRepository;
 import muni.fi.dtos.AuthorDto;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.ProjectDto;
@@ -74,6 +76,10 @@ class ElasticSearchServiceTest {
     private QueryBuilder queryBuilderMock;
     @Mock
     private TextNormalizer textNormalizer;
+    @Mock
+    private AuthorMapper authorMapper;
+    @Mock
+    private AuthorRepository authorRepository;
 
     @Captor
     private ArgumentCaptor<SearchInfo> infoCaptor;
@@ -88,7 +94,7 @@ class ElasticSearchServiceTest {
         openMocks(this);
 
         searchService = new ElasticSearchService(
-                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock, recommendationServiceMock, queryBuilderMock, textNormalizer);
+                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock, recommendationServiceMock, queryBuilderMock, textNormalizer, authorRepository, authorMapper);
 
         // setup mocks
         AuthorDto authorDto1 = new AuthorDto("John Doe", "123456", "student");

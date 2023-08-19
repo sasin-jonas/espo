@@ -12,6 +12,7 @@ export type SearchProjectDto = {
 };
 
 export type OpportunitySearchResultDto = {
-	author: AuthorDto;
+	authorDto: AuthorDto;
 	relevantProjects: ProjectDto[];
+	aggregateScore: number;
 };
