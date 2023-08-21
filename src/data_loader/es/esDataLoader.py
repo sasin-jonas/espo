@@ -144,7 +144,7 @@ class EsDataLoader:
                 if data_line.pop("annotationLanguage").lower() != "en":
                     continue
 
-                EsDataLoader.parse_as_integer(data_line, "Id")
+                EsDataLoader.rename_field(data_line, "Id", "projId")
                 EsDataLoader.rename_field(data_line, "annotation", "description")
 
                 action = {

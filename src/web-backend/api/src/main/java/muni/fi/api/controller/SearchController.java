@@ -6,10 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.service.AggregationService;
 import muni.fi.bl.service.SearchService;
 import muni.fi.dtos.OpportunityDto;
+import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.query.SearchInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,6 +80,14 @@ public class SearchController {
             @RequestBody SearchInfo info) {
         log.info("Searching for opportunities by search phrase with search info: {}", info);
         return searchService.searchByPhrase(info);
+    }
+
+    @PostMapping("/byOpportunity/{id}")
+    public List<OpportunitySearchResultDto> searchByOpportunity(
+            @Parameter(description = "Opportunity ElasticSearch id to search by")
+            @PathVariable("id") String id) {
+        log.info("Searching for relevant authors for opportunity with id: {}", id);
+        return searchService.searchByOpportunity(id);
     }
 
     @Operation(summary = "Get unique filters")

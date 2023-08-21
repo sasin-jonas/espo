@@ -105,7 +105,8 @@ public class QueryBuilder {
         return MoreLikeThisQuery.of(m -> m
                 .fields(fields)
                 .like(
-                        l -> l.document(d -> d.index(index)
+                        l -> l.document(d -> d
+                                .index(index)
                                 .id(id))
                 )
                 .maxQueryTerms(MAX_QUERY_TERMS)

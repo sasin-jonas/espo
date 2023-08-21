@@ -71,7 +71,7 @@ const SearchByOpportunityPage: FC = () => {
 		let searchResult: OpportunitySearchResultDto[];
 		try {
 			searchResult = await searchByOpportunityCall.mutateAsync(
-				selectionModel[0]
+				selectionModel[0] as string
 			);
 		} catch {
 			console.error('Failed to perform opportunity search');
