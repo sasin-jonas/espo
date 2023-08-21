@@ -10,4 +10,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
 
     List<Project> findByAuthorUco(String uco);
 
+    List<Project> findByProjId(String projId);
+
 }

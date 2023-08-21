@@ -1,10 +1,10 @@
 package muni.fi.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -15,10 +15,10 @@ import org.joda.time.DateTime;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @RequiredArgsConstructor
 @Schema(description = "Project data transfer object")
-public class ProjectDto extends BaseEsDto {
+public class ProjectDto {
 
     @Schema(description = "Unique identifier of the entity", example = "123")
     private Long id;

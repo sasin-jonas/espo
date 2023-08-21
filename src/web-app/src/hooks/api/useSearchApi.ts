@@ -14,7 +14,6 @@ import {
 
 import { apiRoutes } from './apiRoutes';
 import { getObjects, postObject } from './useApi';
-import { GridRowId } from '@mui/x-data-grid';
 
 /**
  * Get all filter values
@@ -137,14 +136,10 @@ export const useSearchByOpportunity = (
 		value: ((prevState: AppAlertOptions) => AppAlertOptions) | AppAlertOptions
 	) => void
 ) =>
-	useMutation<
-		OpportunitySearchResultDto[],
-		AxiosError<ErrorResponse>,
-		GridRowId
-	>(
+	useMutation<OpportunitySearchResultDto[], AxiosError<ErrorResponse>, string>(
 		['opportunitySearchResult'],
-		(r: GridRowId) =>
-			postObject(`${apiRoutes.searchUrl}/byOpportunity`, r, token),
+		(r: string) =>
+			postObject(`${apiRoutes.searchUrl}/byOpportunity/${r}`, null, token),
 		{
 			onSuccess: async () => {
 				await qc.invalidateQueries('opportunitySearchResult');

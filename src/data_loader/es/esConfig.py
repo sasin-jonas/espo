@@ -87,8 +87,8 @@ es_schema_mu: Dict[str, Any] = {
                 "uco": {
                     "type": "keyword"
                 },
-                "Id": {
-                    "type": "integer"
+                "projId": {
+                    "type": "keyword"
                 }
             }
         }

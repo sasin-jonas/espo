@@ -15,14 +15,18 @@ import muni.fi.bl.component.TextNormalizer;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.mappers.AuthorMapper;
+import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
 import muni.fi.bl.service.RecommendationService;
 import muni.fi.bl.service.SearchService;
 import muni.fi.dal.entity.Author;
+import muni.fi.dal.entity.Project;
 import muni.fi.dal.repository.AuthorRepository;
+import muni.fi.dal.repository.ProjectRepository;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.dtos.ProjectDto;
+import muni.fi.dtos.ProjectEsDto;
 import muni.fi.query.SearchInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,6 +53,7 @@ import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR
 @Service
 @Slf4j
 public class ElasticSearchService implements SearchService {
+    private final ProjectRepository projectRepository;
     private final AuthorRepository authorRepository;
 
     public static final String CROWDHELIX_INDEX = "crowdhelix_data";
@@ -70,22 +75,25 @@ public class ElasticSearchService implements SearchService {
 
     private final ElasticsearchClient elasticsearchClient;
     private final SearchResultProcessor<OpportunityDto> opportunityResultProcessor;
-    private final SearchResultProcessor<ProjectDto> projectResultProcessor;
+    private final SearchResultProcessor<ProjectEsDto> projectResultProcessor;
     private final ProjectService projectService;
     private final RecommendationService recommendationService;
     private final QueryBuilder queryBuilder;
     private final TextNormalizer textNormalizer;
     private final AuthorMapper authorMapper;
+    private final ProjectMapper projectMapper;
 
     public ElasticSearchService(ElasticsearchClient elasticsearchClient,
                                 SearchResultProcessor<OpportunityDto> opportunityResultProcessor,
-                                SearchResultProcessor<ProjectDto> projectResultProcessor,
+                                SearchResultProcessor<ProjectEsDto> projectResultProcessor,
                                 ProjectService projectService,
                                 RecommendationService recommendationService,
                                 QueryBuilder queryBuilder,
                                 TextNormalizer textNormalizer,
                                 AuthorRepository authorRepository,
-                                AuthorMapper authorMapper) {
+                                AuthorMapper authorMapper,
+                                ProjectRepository projectRepository,
+                                ProjectMapper projectMapper) {
         this.elasticsearchClient = elasticsearchClient;
         this.opportunityResultProcessor = opportunityResultProcessor;
         this.projectResultProcessor = projectResultProcessor;
@@ -95,6 +103,8 @@ public class ElasticSearchService implements SearchService {
         this.textNormalizer = textNormalizer;
         this.authorRepository = authorRepository;
         this.authorMapper = authorMapper;
+        this.projectRepository = projectRepository;
+        this.projectMapper = projectMapper;
     }
 
     @Override
@@ -177,22 +187,23 @@ public class ElasticSearchService implements SearchService {
         return new PageImpl<>(getOpportunityDtosFromHits(hits), pageable, total);
     }
 
+    @Override
     public List<OpportunitySearchResultDto> searchByOpportunity(String esId) {
-        List<ProjectDto> relevantProjects = searchByOpportunityForProjects(esId);
+        List<ProjectEsDto> relevantProjects = searchByOpportunityForProjects(esId);
 
-        Map<String, List<ProjectDto>> relevantAuthorsByUco = relevantProjects
+        Map<String, List<ProjectEsDto>> relevantAuthorsByUcoMap = relevantProjects
                 .stream()
-                .collect(Collectors.groupingBy(p -> p.getAuthor().getUco()));
-        Map<String, Double> authorScores = relevantAuthorsByUco.entrySet().stream()
+                .collect(Collectors.groupingBy(ProjectEsDto::getUco));
+        Map<String, Double> authorScoresMap = relevantAuthorsByUcoMap.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> entry.getValue().stream()
-                                .mapToDouble(ProjectDto::getScore)
+                                .mapToDouble(ProjectEsDto::getScore)
                                 .sum()
                 ));
 
         // Sort the authorScores map by value (score) into a LinkedHashMap
-        Map<String, Double> sortedAuthorScores = authorScores.entrySet().stream()
+        Map<String, Double> sortedAuthorScores = authorScoresMap.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -202,28 +213,38 @@ public class ElasticSearchService implements SearchService {
                 ));
         List<OpportunitySearchResultDto> sortedResults = new ArrayList<>();
         sortedAuthorScores.forEach((authorUco, score) -> {
-            Optional<Author> author = authorRepository.findByUco(authorUco);
+            List<ProjectEsDto> projectEsDtos = relevantAuthorsByUcoMap.get(authorUco);
+            List<Project> projects = new ArrayList<>();
+            for (var proj : projectEsDtos) {
+                List<Project> projectOptional = projectRepository.findByProjId(proj.getProjId());
+                Optional<Project> first = projectOptional.stream().findFirst();
+                first.ifPresent(projects::add);
+            }
+            Optional<Author> authorOptional = authorRepository.findByUco(authorUco);
+            if (authorOptional.isEmpty()) {
+                throw new RuntimeException(String.format("Author with uco %s is not stored in the database.", authorUco));
+            }
             sortedResults.add(
                     new OpportunitySearchResultDto(
-                            authorMapper.toDto(author.get()),
-                            relevantAuthorsByUco.get(authorUco),
+                            authorMapper.toDto(authorOptional.get()),
+                            projectMapper.toDtos(projects),
                             score));
         });
         return sortedResults;
     }
 
-    private List<ProjectDto> searchByOpportunityForProjects(String esId) {
+    private List<ProjectEsDto> searchByOpportunityForProjects(String esId) {
         Query titleSearchQuery = queryBuilder.getMoreLikeThisQuery(
                 esId,
-                List.of(DESCRIPTION_FIELD, TITLE_FIELD), MU_INDEX)._toQuery();
+                List.of(DESCRIPTION_FIELD, TITLE_FIELD), CROWDHELIX_INDEX)._toQuery();
         Query docSearchQuery = queryBuilder.getMoreLikeThisQuery(
-                esId, MU_INDEX)._toQuery();
+                esId, CROWDHELIX_INDEX)._toQuery();
 
-        SearchResponse<ProjectDto> titleResponse = (SearchResponse<ProjectDto>)
-                getSearchResponse(null, titleSearchQuery, MU_INDEX, ProjectDto.class);
-        SearchResponse<ProjectDto> docResponse = (SearchResponse<ProjectDto>)
-                getSearchResponse(null, docSearchQuery, MU_INDEX, ProjectDto.class);
-        Map<String, List<Hit<ProjectDto>>> topResultsMap = getProjTopResultsMap(titleResponse, docResponse);
+        SearchResponse<ProjectEsDto> titleResponse = (SearchResponse<ProjectEsDto>)
+                getSearchResponse(null, titleSearchQuery, MU_INDEX, ProjectEsDto.class);
+        SearchResponse<ProjectEsDto> docResponse = (SearchResponse<ProjectEsDto>)
+                getSearchResponse(null, docSearchQuery, MU_INDEX, ProjectEsDto.class);
+        Map<String, List<Hit<ProjectEsDto>>> topResultsMap = getProjTopResultsMap(titleResponse, docResponse);
         return projectResultProcessor.aggregateResultsByScore(topResultsMap);
     }
 
@@ -258,11 +279,11 @@ public class ElasticSearchService implements SearchService {
         return topResultsMap;
     }
 
-    private Map<String, List<Hit<ProjectDto>>> getProjTopResultsMap(SearchResponse<ProjectDto> titleResponse, SearchResponse<ProjectDto> docResponse) {
+    private Map<String, List<Hit<ProjectEsDto>>> getProjTopResultsMap(SearchResponse<ProjectEsDto> titleResponse, SearchResponse<ProjectEsDto> docResponse) {
         var titleHitList = titleResponse.hits().hits();
         var docHitList = docResponse.hits().hits();
 
-        Map<String, List<Hit<ProjectDto>>> topResultsMap = new HashMap<>();
+        Map<String, List<Hit<ProjectEsDto>>> topResultsMap = new HashMap<>();
         topResultsMap.put(TITLE_FIELD, titleHitList);
         topResultsMap.put(DESCRIPTION_FIELD, docHitList);
         return topResultsMap;
