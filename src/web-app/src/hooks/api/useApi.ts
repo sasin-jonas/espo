@@ -53,6 +53,27 @@ export const postObject = async <Response, Request>(
 };
 
 /**
+ * Post object to the API
+ * @param url The url to post the object to
+ * @param obj The object to post
+ * @param token Bearer token to authenticate with
+ * @param params Query parameters
+ */
+export const postObjectParams = async <Response, Request>(
+	url: string,
+	obj: Request,
+	token: string,
+	params: any
+) => {
+	console.log(params);
+	const result = await axios.post<Response>(url, obj, {
+		headers: { Authorization: `Bearer ${token}` },
+		params
+	});
+	return result.data;
+};
+
+/**
  * Update object in the API
  * @param url The url to put the object to
  * @param token Bearer token to authenticate with

@@ -16,3 +16,8 @@ export type OpportunitySearchResultDto = {
 	relevantProjects: ProjectDto[];
 	aggregateScore: number;
 };
+
+export type SearchByOpportunityDto = {
+	opportunityId: string;
+	maxResults: number;
+};

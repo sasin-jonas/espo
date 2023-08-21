@@ -39,7 +39,7 @@ public interface SearchService {
     /**
      * Search by opportunity for relevant authors and their projects
      */
-    List<OpportunitySearchResultDto> searchByOpportunity(String opportunityId);
+    List<OpportunitySearchResultDto> searchByOpportunity(String opportunityId, int maxResults);
 
     /**
      * Searches for opportunities based on input params. Is used for filtering, paging and sorting

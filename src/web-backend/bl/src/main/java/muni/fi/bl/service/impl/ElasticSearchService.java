@@ -23,6 +23,7 @@ import muni.fi.dal.entity.Author;
 import muni.fi.dal.entity.Project;
 import muni.fi.dal.repository.AuthorRepository;
 import muni.fi.dal.repository.ProjectRepository;
+import muni.fi.dtos.BaseEsDto;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.dtos.ProjectDto;
@@ -42,6 +43,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -188,7 +190,7 @@ public class ElasticSearchService implements SearchService {
     }
 
     @Override
-    public List<OpportunitySearchResultDto> searchByOpportunity(String esId) {
+    public List<OpportunitySearchResultDto> searchByOpportunity(String esId, int maxResults) {
         List<ProjectEsDto> relevantProjects = searchByOpportunityForProjects(esId);
 
         Map<String, List<ProjectEsDto>> relevantAuthorsByUcoMap = relevantProjects
@@ -205,6 +207,7 @@ public class ElasticSearchService implements SearchService {
         // Sort the authorScores map by value (score) into a LinkedHashMap
         Map<String, Double> sortedAuthorScores = authorScoresMap.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(maxResults)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
@@ -214,7 +217,8 @@ public class ElasticSearchService implements SearchService {
         List<OpportunitySearchResultDto> sortedResults = new ArrayList<>();
         sortedAuthorScores.forEach((authorUco, score) -> {
             List<ProjectEsDto> projectEsDtos = relevantAuthorsByUcoMap.get(authorUco);
-            List<Project> projects = new ArrayList<>();
+            projectEsDtos.sort(Comparator.comparingDouble(BaseEsDto::getScore).reversed());
+            List<Project> projects = new LinkedList<>();
             for (var proj : projectEsDtos) {
                 List<Project> projectOptional = projectRepository.findByProjId(proj.getProjId());
                 Optional<Project> first = projectOptional.stream().findFirst();
