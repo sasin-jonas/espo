@@ -3,6 +3,7 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import ColoredLine from './ColoredLine';
 import { OpportunitySearchResultDto } from '../../types/Search.Types';
+import AuthorPreview from '../opportunity/AuthorPreview';
 
 type Props = {
 	searchResult: OpportunitySearchResultDto[];
@@ -31,7 +32,13 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 		<Grid container justifyContent="center" rowSpacing={3} columnSpacing={1}>
 			{searchResult.map(result => (
 				<Grid item container key={result.authorDto.uco}>
-					<Grid item xs={11}></Grid>
+					<Grid item xs={11}>
+						<AuthorPreview
+							author={result.authorDto}
+							projects={result.relevantProjects}
+							aggregateScore={result.aggregateScore}
+						></AuthorPreview>
+					</Grid>
 				</Grid>
 			))}
 		</Grid>
