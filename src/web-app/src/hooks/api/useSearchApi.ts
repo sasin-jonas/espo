@@ -9,11 +9,12 @@ import {
 } from '../../types/Alert.Types';
 import {
 	OpportunitySearchResultDto,
+	SearchByOpportunityDto,
 	SearchProjectDto
 } from '../../types/Search.Types';
 
 import { apiRoutes } from './apiRoutes';
-import { getObjects, postObject } from './useApi';
+import { getObjects, postObject, postObjectParams } from './useApi';
 
 /**
  * Get all filter values
@@ -136,10 +137,22 @@ export const useSearchByOpportunity = (
 		value: ((prevState: AppAlertOptions) => AppAlertOptions) | AppAlertOptions
 	) => void
 ) =>
-	useMutation<OpportunitySearchResultDto[], AxiosError<ErrorResponse>, string>(
+	useMutation<
+		OpportunitySearchResultDto[],
+		AxiosError<ErrorResponse>,
+		SearchByOpportunityDto
+	>(
 		['opportunitySearchResult'],
-		(r: string) =>
-			postObject(`${apiRoutes.searchUrl}/byOpportunity/${r}`, null, token),
+		(searchByOpportunityDto: SearchByOpportunityDto) => {
+			const queryParams: { [k: string]: any } = {};
+			queryParams.maxResults = searchByOpportunityDto.maxResults;
+			return postObjectParams(
+				`${apiRoutes.searchUrl}/byOpportunity/${searchByOpportunityDto.opportunityId}`,
+				null,
+				token,
+				queryParams
+			);
+		},
 		{
 			onSuccess: async () => {
 				await qc.invalidateQueries('opportunitySearchResult');

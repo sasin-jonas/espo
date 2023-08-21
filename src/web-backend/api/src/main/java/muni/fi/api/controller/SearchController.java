@@ -85,9 +85,10 @@ public class SearchController {
     @PostMapping("/byOpportunity/{id}")
     public List<OpportunitySearchResultDto> searchByOpportunity(
             @Parameter(description = "Opportunity ElasticSearch id to search by")
-            @PathVariable("id") String id) {
+            @PathVariable("id") String id,
+            @RequestParam(defaultValue = "10") int maxResults) {
         log.info("Searching for relevant authors for opportunity with id: {}", id);
-        return searchService.searchByOpportunity(id);
+        return searchService.searchByOpportunity(id, maxResults);
     }
 
     @Operation(summary = "Get unique filters")
