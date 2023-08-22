@@ -1,20 +1,30 @@
 import { FC, PropsWithChildren, useState } from 'react';
-import { Button, Card, CardContent, Grid, Modal } from '@mui/material';
+import {
+	Box,
+	Button,
+	Card,
+	CardContent,
+	Grid,
+	Modal,
+	Typography
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { ProjectDto } from '../../types/Project.Types';
+import { AuthorDto, ProjectDto } from '../../types/Project.Types';
 import ProjectsDataGrid from '../project/ProjectsDataGrid';
 
 type Props = PropsWithChildren<{
 	projects?: ProjectDto[];
+	author?: AuthorDto;
 }>;
 
 /**
  * Relevant projects modal display
  * @param projects Relevant projects to display
+ * @param author Author that we are displaying the relevant projects for
  * @param children Clickable element to open the modal window (author preview)
  * @constructor
  */
-const RelevantProjectsDetail: FC<Props> = ({ projects, children }) => {
+const RelevantProjectsDetail: FC<Props> = ({ projects, author, children }) => {
 	const [open, setOpen] = useState(false);
 	const handleOpen = () => setOpen(true);
 	const handleClose = () => setOpen(false);
@@ -53,6 +63,10 @@ const RelevantProjectsDetail: FC<Props> = ({ projects, children }) => {
 						</Button>
 					</Grid>
 					<CardContent sx={{ width: 'inherit' }}>
+						<Typography variant={'h5'}>
+							{author?.name} - {author?.uco}
+						</Typography>
+						<Box height={10} />
 						<ProjectsDataGrid
 							selection={false}
 							serverSide={false}

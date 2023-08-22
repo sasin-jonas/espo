@@ -227,6 +227,14 @@ const OpportunitiesDataGrid: FC<Props> = ({
 			minWidth: 200
 		},
 		{
+			field: 'helix',
+			headerName: 'Helix',
+			flex: 0.2,
+			headerClassName: 'column--header--theme',
+			filterOperators: containsOnlyFilterOperators,
+			minWidth: 250
+		},
+		{
 			field: 'esId',
 			headerName: '',
 			filterable: false,
