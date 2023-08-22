@@ -19,13 +19,16 @@ import muni.fi.bl.component.TextNormalizer;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.mappers.AuthorMapper;
+import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
 import muni.fi.bl.service.RecommendationService;
 import muni.fi.bl.service.SearchService;
 import muni.fi.dal.repository.AuthorRepository;
+import muni.fi.dal.repository.ProjectRepository;
 import muni.fi.dtos.AuthorDto;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.ProjectDto;
+import muni.fi.dtos.ProjectEsDto;
 import muni.fi.query.SearchInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +70,7 @@ class ElasticSearchServiceTest {
     @Mock
     private SearchResultProcessor<OpportunityDto> resultProcessorMock;
     @Mock
-    private SearchResultProcessor<ProjectDto> projectResultProcessor;
+    private SearchResultProcessor<ProjectEsDto> projectResultProcessor;
     @Mock
     private ProjectService projectServiceMock;
     @Mock
@@ -80,6 +83,10 @@ class ElasticSearchServiceTest {
     private AuthorMapper authorMapper;
     @Mock
     private AuthorRepository authorRepository;
+    @Mock
+    private ProjectRepository projectRepository;
+    @Mock
+    private ProjectMapper projectMapper;
 
     @Captor
     private ArgumentCaptor<SearchInfo> infoCaptor;
@@ -94,7 +101,9 @@ class ElasticSearchServiceTest {
         openMocks(this);
 
         searchService = new ElasticSearchService(
-                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock, recommendationServiceMock, queryBuilderMock, textNormalizer, authorRepository, authorMapper);
+                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock,
+                recommendationServiceMock, queryBuilderMock, textNormalizer, authorRepository, authorMapper,
+                projectRepository, projectMapper);
 
         // setup mocks
         AuthorDto authorDto1 = new AuthorDto("John Doe", "123456", "student");
