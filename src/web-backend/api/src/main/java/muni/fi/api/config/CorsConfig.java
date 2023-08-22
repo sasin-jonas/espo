@@ -1,6 +1,7 @@
 package muni.fi.api.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -14,12 +15,14 @@ public class CorsConfig {
 
         return new WebMvcConfigurer() {
             @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry
-                        .addMapping("/**")
-                        .allowedMethods(CorsConfiguration.ALL)
-                        .allowedHeaders(CorsConfiguration.ALL)
-                        .allowedOriginPatterns(CorsConfiguration.ALL);
+            public void addCorsMappings(@Nullable CorsRegistry registry) {
+                if (registry != null) {
+                    registry
+                            .addMapping("/**")
+                            .allowedMethods(CorsConfiguration.ALL)
+                            .allowedHeaders(CorsConfiguration.ALL)
+                            .allowedOriginPatterns(CorsConfiguration.ALL);
+                }
             }
         };
     }

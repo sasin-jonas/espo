@@ -1,20 +1,17 @@
 package muni.fi.bl.service.impl;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.component.QueryBuilder;
+import muni.fi.bl.component.SearchPerformer;
 import muni.fi.bl.component.SearchResultProcessor;
 import muni.fi.bl.component.TextNormalizer;
 import muni.fi.bl.exceptions.AppException;
-import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.mappers.AuthorMapper;
 import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
@@ -37,10 +34,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -51,13 +46,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR;
-
 @Service
 @Slf4j
 public class ElasticSearchService implements SearchService {
-    private final ProjectRepository projectRepository;
-    private final AuthorRepository authorRepository;
 
     public static final String CROWDHELIX_INDEX = "crowdhelix_data";
     public static final String MU_INDEX = "mu_data";
@@ -76,18 +67,20 @@ public class ElasticSearchService implements SearchService {
     public static final int MIN_TERM_FREQ = 1;
     public static final String MINIMUM_TERMS_MATCH = "10%";
 
-    private final ElasticsearchClient elasticsearchClient;
     private final SearchResultProcessor<OpportunityDto> opportunityResultProcessor;
     private final SearchResultProcessor<ProjectEsDto> projectResultProcessor;
     private final ProjectService projectService;
     private final RecommendationService recommendationService;
     private final QueryBuilder queryBuilder;
     private final TextNormalizer textNormalizer;
+    private final AuthorRepository authorRepository;
     private final AuthorMapper authorMapper;
+    private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
+    private final SearchPerformer<OpportunityDto> opportunitySearchPerformer;
+    private final SearchPerformer<ProjectEsDto> projectSearchPerformer;
 
-    public ElasticSearchService(ElasticsearchClient elasticsearchClient,
-                                SearchResultProcessor<OpportunityDto> opportunityResultProcessor,
+    public ElasticSearchService(SearchResultProcessor<OpportunityDto> opportunityResultProcessor,
                                 SearchResultProcessor<ProjectEsDto> projectResultProcessor,
                                 ProjectService projectService,
                                 RecommendationService recommendationService,
@@ -96,8 +89,9 @@ public class ElasticSearchService implements SearchService {
                                 AuthorRepository authorRepository,
                                 AuthorMapper authorMapper,
                                 ProjectRepository projectRepository,
-                                ProjectMapper projectMapper) {
-        this.elasticsearchClient = elasticsearchClient;
+                                ProjectMapper projectMapper,
+                                SearchPerformer<OpportunityDto> opportunitySearchPerformer,
+                                SearchPerformer<ProjectEsDto> projectSearchPerformer) {
         this.opportunityResultProcessor = opportunityResultProcessor;
         this.projectResultProcessor = projectResultProcessor;
         this.projectService = projectService;
@@ -108,6 +102,8 @@ public class ElasticSearchService implements SearchService {
         this.authorMapper = authorMapper;
         this.projectRepository = projectRepository;
         this.projectMapper = projectMapper;
+        this.opportunitySearchPerformer = opportunitySearchPerformer;
+        this.projectSearchPerformer = projectSearchPerformer;
     }
 
     @Override
@@ -165,7 +161,7 @@ public class ElasticSearchService implements SearchService {
         )._toQuery();
 
         int maxResults = info.maxResults() == null ? DEFAULT_DOCS_SIZE : info.maxResults();
-        SearchResponse<OpportunityDto> searchResponse = (SearchResponse<OpportunityDto>)
+        SearchResponse<OpportunityDto> searchResponse = opportunitySearchPerformer.
                 getSearchResponse(filterQuery, multiMatchQuery, maxResults, 0, null, CROWDHELIX_INDEX, OpportunityDto.class);
         List<Hit<OpportunityDto>> hits = searchResponse.hits().hits();
 
@@ -177,7 +173,7 @@ public class ElasticSearchService implements SearchService {
         Query allQuery = queryBuilder.getSearchAllQuery()._toQuery();
         SortOptions sortOptions = sortField != null ? getSortOptions(sortField, desc) : null;
         Query filterQuery = getFilterQuery(filterField, filterValue);
-        SearchResponse<OpportunityDto> searchResponse = (SearchResponse<OpportunityDto>)
+        SearchResponse<OpportunityDto> searchResponse = opportunitySearchPerformer.
                 getSearchResponse(filterQuery, allQuery, pageSize, page, sortOptions, CROWDHELIX_INDEX, OpportunityDto.class);
         List<Hit<OpportunityDto>> hits = searchResponse.hits().hits();
         PageRequest pageable = PageRequest.of(page, pageSize);
@@ -256,9 +252,9 @@ public class ElasticSearchService implements SearchService {
         Query docSearchQuery = queryBuilder.getMoreLikeThisQuery(
                 esId, CROWDHELIX_INDEX)._toQuery();
 
-        SearchResponse<ProjectEsDto> titleResponse = (SearchResponse<ProjectEsDto>)
+        SearchResponse<ProjectEsDto> titleResponse = projectSearchPerformer.
                 getSearchResponse(null, titleSearchQuery, MU_INDEX, ProjectEsDto.class);
-        SearchResponse<ProjectEsDto> docResponse = (SearchResponse<ProjectEsDto>)
+        SearchResponse<ProjectEsDto> docResponse = projectSearchPerformer.
                 getSearchResponse(null, docSearchQuery, MU_INDEX, ProjectEsDto.class);
         Map<String, List<Hit<ProjectEsDto>>> topResultsMap = getProjTopResultsMap(titleResponse, docResponse);
         return projectResultProcessor.aggregateResultsByScore(topResultsMap);
@@ -276,9 +272,9 @@ public class ElasticSearchService implements SearchService {
                         .map(ProjectDto::getProcessedAnnotation)
                         .toList())._toQuery();
 
-        SearchResponse<OpportunityDto> titleResponse = (SearchResponse<OpportunityDto>)
+        SearchResponse<OpportunityDto> titleResponse = opportunitySearchPerformer.
                 getSearchResponse(filterQuery, titleSearchQuery, CROWDHELIX_INDEX, OpportunityDto.class);
-        SearchResponse<OpportunityDto> docResponse = (SearchResponse<OpportunityDto>)
+        SearchResponse<OpportunityDto> docResponse = opportunitySearchPerformer.
                 getSearchResponse(filterQuery, docSearchQuery, CROWDHELIX_INDEX, OpportunityDto.class);
         Map<String, List<Hit<OpportunityDto>>> topResultsMap = getOppTopResultsMap(titleResponse, docResponse);
 
@@ -303,30 +299,6 @@ public class ElasticSearchService implements SearchService {
         topResultsMap.put(TITLE_FIELD, titleHitList);
         topResultsMap.put(DESCRIPTION_FIELD, docHitList);
         return topResultsMap;
-    }
-
-    private SearchResponse<?> getSearchResponse(Query filterQuery, Query searchQuery, String crowdhelixIndex, Class<?> documentClass) {
-        return getSearchResponse(filterQuery, searchQuery, MAX_DOCS_SIZE, 0, null, crowdhelixIndex, documentClass);
-    }
-
-    private SearchResponse<?> getSearchResponse(Query filterQuery, Query searchQuery, int size, int page, SortOptions sortOptions, String crowdhelixIndex, Class<?> documentClass) {
-        try {
-            SearchRequest searchRequest = SearchRequest.of(s -> s
-                    .index(crowdhelixIndex)
-                    .query(searchQuery)
-                    .size(size)
-                    .from(size * page)
-                    .sort(sortOptions != null ? List.of(sortOptions) : Collections.emptyList())
-                    .postFilter(filterQuery));
-            return elasticsearchClient.search(searchRequest, documentClass);
-        } catch (IOException e) {
-            log.error(ELASTIC_CONNECTION_ERROR, e);
-            throw new ConnectionException(ELASTIC_CONNECTION_ERROR, e);
-        } catch (ElasticsearchException e) {
-            String message = "Failed to perform search or no data was found";
-            log.warn(message, e);
-            throw new AppException(message, e);
-        }
     }
 
     private SortOptions getSortOptions(String sortField, boolean desc) {

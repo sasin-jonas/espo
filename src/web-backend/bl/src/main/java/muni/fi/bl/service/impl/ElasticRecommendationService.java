@@ -37,13 +37,13 @@ public class ElasticRecommendationService implements RecommendationService {
     private final ProjectRepository projectRepository;
     private final ProjectMapper dtoMapper;
     private final ElasticsearchClient elasticsearchClient;
-    private final SearchResultProcessor resultProcessor;
+    private final SearchResultProcessor<OpportunityDto> resultProcessor;
     private final QueryBuilder queryBuilder;
 
     public ElasticRecommendationService(ProjectRepository projectRepository,
                                         ProjectMapper dtoMapper,
                                         ElasticsearchClient elasticsearchClient,
-                                        SearchResultProcessor resultProcessor,
+                                        SearchResultProcessor<OpportunityDto> resultProcessor,
                                         QueryBuilder queryBuilder) {
         this.projectRepository = projectRepository;
         this.dtoMapper = dtoMapper;

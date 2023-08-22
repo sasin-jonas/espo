@@ -14,6 +14,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import muni.fi.bl.component.QueryBuilder;
+import muni.fi.bl.component.SearchPerformer;
 import muni.fi.bl.component.SearchResultProcessor;
 import muni.fi.bl.component.TextNormalizer;
 import muni.fi.bl.exceptions.AppException;
@@ -100,10 +101,12 @@ class ElasticSearchServiceTest {
     void setUp() throws IOException {
         openMocks(this);
 
+        SearchPerformer<OpportunityDto> opportunitySearchPerformer = new SearchPerformer<>(elasticsearchClientMock);
+        SearchPerformer<ProjectEsDto> projectSearchPerformer = new SearchPerformer<>(elasticsearchClientMock);
         searchService = new ElasticSearchService(
-                elasticsearchClientMock, resultProcessorMock, projectResultProcessor, projectServiceMock,
+                resultProcessorMock, projectResultProcessor, projectServiceMock,
                 recommendationServiceMock, queryBuilderMock, textNormalizer, authorRepository, authorMapper,
-                projectRepository, projectMapper);
+                projectRepository, projectMapper, opportunitySearchPerformer, projectSearchPerformer);
 
         // setup mocks
         AuthorDto authorDto1 = new AuthorDto("John Doe", "123456", "student");
