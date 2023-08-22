@@ -1,21 +1,15 @@
 import { FC } from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
-import { AuthorDto, ProjectDto } from '../../types/Project.Types';
-
-type AuthorProps = {
-	author: AuthorDto;
-	projects: ProjectDto[];
-	aggregateScore: number;
-};
+import { OpportunitySearchResultDto } from '../../types/Search.Types';
 
 /**
  * Opportunity preview component
  * @param opportunity Opportunity to display
  * @constructor
  */
-const AuthorPreview: FC<AuthorProps> = ({
-	author,
-	projects,
+const AuthorPreview: FC<OpportunitySearchResultDto> = ({
+	authorDto,
+	relevantProjects,
 	aggregateScore
 }) => (
 	<Card sx={{ width: 1, borderRadius: 2 }}>
@@ -34,7 +28,7 @@ const AuthorPreview: FC<AuthorProps> = ({
 					color="textPrimary"
 					sx={{ textTransform: 'none' }}
 				>
-					{author.name} - {author.uco}
+					{authorDto.name} - {authorDto.uco}
 				</Typography>
 			</Box>
 			<Box>
@@ -52,7 +46,7 @@ const AuthorPreview: FC<AuthorProps> = ({
 						textTransform: 'none'
 					}}
 				>
-					{projects.length} relevant projects
+					{relevantProjects.length} relevant projects
 					<br />
 					score: {aggregateScore}
 				</Typography>
