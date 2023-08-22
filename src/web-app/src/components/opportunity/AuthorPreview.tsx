@@ -10,7 +10,8 @@ import { OpportunitySearchResultDto } from '../../types/Search.Types';
 const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 	authorDto,
 	relevantProjects,
-	aggregateScore
+	aggregateScore,
+	rank
 }) => (
 	<Card sx={{ width: 1, borderRadius: 2 }}>
 		<CardContent sx={{ width: 'inherit' }}>
@@ -28,7 +29,7 @@ const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 					color="textPrimary"
 					sx={{ textTransform: 'none' }}
 				>
-					{authorDto.name} - {authorDto.uco}
+					{rank}: {authorDto.name} - {authorDto.uco}
 				</Typography>
 			</Box>
 			<Box>
@@ -48,7 +49,7 @@ const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 				>
 					{relevantProjects.length} relevant projects
 					<br />
-					score: {aggregateScore}
+					score: {(Math.round(aggregateScore * 100) / 100).toFixed(2)}
 				</Typography>
 			</Box>
 		</CardContent>

@@ -56,6 +56,7 @@ type Props = {
 	loading?: boolean;
 	onGridSelectionChange?: (ids: GridSelectionModel) => void;
 	onPageSizeChange?: (size: number) => void;
+	administrate: boolean;
 	selection: boolean;
 	serverSide: boolean;
 };
@@ -67,6 +68,7 @@ type Props = {
  * @param loading Loading state flag
  * @param selection Selection enabled flag
  * @param serverSide Server-side flag
+ * @param administrate If update and delete buttons should be shown
  * @constructor
  */
 const ProjectsDataGrid: FC<Props> = ({
@@ -74,7 +76,8 @@ const ProjectsDataGrid: FC<Props> = ({
 	onGridSelectionChange,
 	loading,
 	selection,
-	serverSide
+	serverSide,
+	administrate
 }) => {
 	// context
 	const qc = useQueryClient();
@@ -320,7 +323,7 @@ const ProjectsDataGrid: FC<Props> = ({
 			headerName: '',
 			filterable: false,
 			sortable: false,
-			minWidth: selection ? 50 : 230,
+			minWidth: selection || !administrate ? 50 : 230,
 			headerClassName: 'column--header--theme',
 			renderCell: (params: GridRenderCellParams<number>) => (
 				<strong>
@@ -329,7 +332,7 @@ const ProjectsDataGrid: FC<Props> = ({
 							<Visibility />
 						</Tooltip>
 					</ProjectDetail>
-					{!selection && (
+					{!selection && administrate && (
 						<>
 							<ProjectEdit
 								project={projectRows.find(u => u.id === params.value)}

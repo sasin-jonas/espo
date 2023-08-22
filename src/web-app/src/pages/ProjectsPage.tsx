@@ -155,7 +155,7 @@ const ProjectsPage: FC = () => {
 					Download sample JSON
 				</Button>
 			</UploadButtons>
-			<ProjectsDataGrid selection={false} serverSide />
+			<ProjectsDataGrid selection={false} serverSide administrate />
 		</>
 	) : (
 		<Typography>You are unauthorized for the management section</Typography>

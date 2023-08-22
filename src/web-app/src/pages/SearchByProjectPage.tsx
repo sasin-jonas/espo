@@ -142,6 +142,7 @@ const SearchByProjectPage: FC = () => {
 					onGridSelectionChange={onGridSelectionChange}
 					selection
 					serverSide
+					administrate={false}
 				/>
 			</Box>
 			<Grid container justifyContent="left" spacing={3}>
