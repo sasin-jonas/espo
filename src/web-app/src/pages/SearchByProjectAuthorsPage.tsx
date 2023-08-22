@@ -244,6 +244,7 @@ const SearchByProjectAuthorsPage: FC = () => {
 							onPageSizeChange={newSize => setProjectPageSize(newSize)}
 							selection
 							serverSide={false}
+							administrate={false}
 						/>
 					</Grid>
 				)}

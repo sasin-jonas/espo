@@ -4,6 +4,7 @@ import { Box, Grid, Typography } from '@mui/material';
 import ColoredLine from './ColoredLine';
 import { OpportunitySearchResultDto } from '../../types/Search.Types';
 import AuthorPreview from '../opportunity/AuthorPreview';
+import RelevantProjectsDetail from '../author/RelevantProjectsDetail';
 
 type Props = {
 	searchResult: OpportunitySearchResultDto[];
@@ -30,15 +31,16 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 			)}
 		</Grid>
 		<Grid container justifyContent="center" rowSpacing={3} columnSpacing={1}>
-			{searchResult.map(result => (
-				<Grid item container key={result.authorDto.uco}>
-					<Grid item xs={11}>
+			{searchResult.map((result, index) => (
+				<Grid item xs={6} key={result.authorDto.uco}>
+					<RelevantProjectsDetail projects={result.relevantProjects}>
 						<AuthorPreview
 							authorDto={result.authorDto}
 							relevantProjects={result.relevantProjects}
 							aggregateScore={result.aggregateScore}
+							rank={index + 1}
 						></AuthorPreview>
-					</Grid>
+					</RelevantProjectsDetail>
 				</Grid>
 			))}
 		</Grid>
