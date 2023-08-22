@@ -34,8 +34,8 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 				<Grid item container key={result.authorDto.uco}>
 					<Grid item xs={11}>
 						<AuthorPreview
-							author={result.authorDto}
-							projects={result.relevantProjects}
+							authorDto={result.authorDto}
+							relevantProjects={result.relevantProjects}
 							aggregateScore={result.aggregateScore}
 						></AuthorPreview>
 					</Grid>
