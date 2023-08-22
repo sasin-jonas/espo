@@ -33,7 +33,10 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 		<Grid container justifyContent="center" rowSpacing={3} columnSpacing={1}>
 			{searchResult.map((result, index) => (
 				<Grid item xs={6} key={result.authorDto.uco}>
-					<RelevantProjectsDetail projects={result.relevantProjects}>
+					<RelevantProjectsDetail
+						projects={result.relevantProjects}
+						author={result.authorDto}
+					>
 						<AuthorPreview
 							authorDto={result.authorDto}
 							relevantProjects={result.relevantProjects}
