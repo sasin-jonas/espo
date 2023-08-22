@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -126,6 +127,19 @@ public class QueryBuilder {
     public MultiMatchQuery getMultiMatchQuery(String matchPhrase) {
         return MultiMatchQuery.of(m -> m
                 .fields(String.format("%s^2", TITLE_FIELD), DESCRIPTION_FIELD)
+                .query(matchPhrase));
+    }
+
+    /**
+     * Create a match query for performing search among a field
+     *
+     * @param field       The field to search among
+     * @param matchPhrase The phrase to search with
+     * @return The constructed Match query
+     */
+    public MatchQuery getMatchQuery(String field, String matchPhrase) {
+        return MatchQuery.of(m -> m
+                .field(field)
                 .query(matchPhrase));
     }
 

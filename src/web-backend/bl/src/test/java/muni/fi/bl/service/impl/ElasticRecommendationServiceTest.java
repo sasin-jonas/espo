@@ -115,7 +115,7 @@ class ElasticRecommendationServiceTest {
                         .document(d -> d
                                 .index(someIndex)
                                 .id("someId")))));
-        when(queryBuilderMock.getMoreLikeThisQuery(anyString(), CROWDHELIX_INDEX)).thenReturn(MoreLikeThisQuery.of(b -> b
+        when(queryBuilderMock.getMoreLikeThisQuery(anyString(), eq(CROWDHELIX_INDEX))).thenReturn(MoreLikeThisQuery.of(b -> b
                 .like(l -> l
                         .document(d -> d
                                 .index(someIndex)

@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -175,9 +176,7 @@ public class ElasticSearchService implements SearchService {
     public Page<OpportunityDto> searchForAll(int page, int pageSize, String sortField, boolean desc, String filterField, String filterValue) {
         Query allQuery = queryBuilder.getSearchAllQuery()._toQuery();
         SortOptions sortOptions = sortField != null ? getSortOptions(sortField, desc) : null;
-        Query filterQuery = filterField != null && filterValue != null
-                ? queryBuilder.getFilterQuery(filterField, filterValue)._toQuery()
-                : queryBuilder.getFilterQuery(SearchInfo.empty())._toQuery();
+        Query filterQuery = getFilterQuery(filterField, filterValue);
         SearchResponse<OpportunityDto> searchResponse = (SearchResponse<OpportunityDto>)
                 getSearchResponse(filterQuery, allQuery, pageSize, page, sortOptions, CROWDHELIX_INDEX, OpportunityDto.class);
         List<Hit<OpportunityDto>> hits = searchResponse.hits().hits();
@@ -235,6 +234,19 @@ public class ElasticSearchService implements SearchService {
                             score));
         });
         return sortedResults;
+    }
+
+    private Query getFilterQuery(String filterField, String filterValue) {
+        Query filterQuery = filterField != null && filterValue != null
+                ? queryBuilder.getFilterQuery(filterField, filterValue)._toQuery()
+                : queryBuilder.getFilterQuery(SearchInfo.empty())._toQuery();
+        if (filterField != null && filterValue != null && filterField.equals(TITLE_FIELD)) {
+            BoolQuery.Builder boolFilterQuery = new BoolQuery.Builder();
+            Query matchQuery = queryBuilder.getMatchQuery(filterField, filterValue)._toQuery();
+            boolFilterQuery.should(List.of(filterQuery, matchQuery));
+            filterQuery = boolFilterQuery.build()._toQuery();
+        }
+        return filterQuery;
     }
 
     private List<ProjectEsDto> searchByOpportunityForProjects(String esId) {
