@@ -1,5 +1,6 @@
 package muni.fi.bl.service;
 
+import muni.fi.bl.service.enums.AuthorProjectsSortType;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.query.SearchInfo;
@@ -39,7 +40,7 @@ public interface SearchService {
     /**
      * Search by opportunity for relevant authors and their projects
      */
-    List<OpportunitySearchResultDto> searchByOpportunity(String opportunityId, int maxResults);
+    List<OpportunitySearchResultDto> searchByOpportunity(String opportunityId, int maxResults, AuthorProjectsSortType sortBy);
 
     /**
      * Searches for opportunities based on input params. Is used for filtering, paging and sorting

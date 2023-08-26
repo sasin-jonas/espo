@@ -6,6 +6,6 @@ import java.util.List;
 
 @Schema(description = "Search result for searching by an opportunity")
 public record OpportunitySearchResultDto(AuthorDto authorDto, List<ProjectDto> relevantProjects,
-                                         Double aggregateScore) {
+                                         Double sumScore, Double averageScore, Double maxScore) {
 
 }

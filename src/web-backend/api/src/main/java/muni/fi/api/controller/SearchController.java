@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.service.AggregationService;
 import muni.fi.bl.service.SearchService;
+import muni.fi.bl.service.enums.AuthorProjectsSortType;
 import muni.fi.dtos.OpportunityDto;
 import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.query.SearchInfo;
@@ -86,9 +87,10 @@ public class SearchController {
     public List<OpportunitySearchResultDto> searchByOpportunity(
             @Parameter(description = "Opportunity ElasticSearch id to search by")
             @PathVariable("id") String id,
-            @RequestParam(defaultValue = "10") int maxResults) {
+            @RequestParam(defaultValue = "10") int maxResults,
+            @RequestParam(defaultValue = "SUM") AuthorProjectsSortType sortBy) {
         log.info("Searching for relevant authors for opportunity with id: {}", id);
-        return searchService.searchByOpportunity(id, maxResults);
+        return searchService.searchByOpportunity(id, maxResults, sortBy);
     }
 
     @Operation(summary = "Get unique filters")
