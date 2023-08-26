@@ -11,6 +11,8 @@ const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 	authorDto,
 	relevantProjects,
 	sumScore,
+	maxScore,
+	averageScore,
 	rank
 }) => (
 	<Card sx={{ width: 1, borderRadius: 2 }}>
@@ -49,7 +51,12 @@ const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 				>
 					{relevantProjects.length} relevant projects
 					<br />
-					score: {(Math.round(sumScore * 100) / 100).toFixed(2)}
+					Total project score: {(Math.round(sumScore * 100) / 100).toFixed(2)}
+					<br />
+					Highest score: {(Math.round(maxScore * 100) / 100).toFixed(2)}
+					<br />
+					Average score: {(Math.round(averageScore * 100) / 100).toFixed(2)}
+					<br />
 				</Typography>
 			</Box>
 		</CardContent>

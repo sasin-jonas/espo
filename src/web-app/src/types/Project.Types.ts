@@ -11,6 +11,7 @@ export type ProjectDto = {
 	investor: string;
 	department?: DepartmentDto;
 	annotation: string;
+	score?: string;
 };
 
 export type ProjectPageable = {

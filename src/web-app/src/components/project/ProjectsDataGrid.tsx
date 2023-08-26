@@ -59,6 +59,7 @@ type Props = {
 	administrate: boolean;
 	selection: boolean;
 	serverSide: boolean;
+	showScore?: boolean;
 };
 
 /**
@@ -69,6 +70,7 @@ type Props = {
  * @param selection Selection enabled flag
  * @param serverSide Server-side flag
  * @param administrate If update and delete buttons should be shown
+ * @param showScore If the table will show project score instead of author uco
  * @constructor
  */
 const ProjectsDataGrid: FC<Props> = ({
@@ -77,7 +79,8 @@ const ProjectsDataGrid: FC<Props> = ({
 	loading,
 	selection,
 	serverSide,
-	administrate
+	administrate,
+	showScore
 }) => {
 	// context
 	const qc = useQueryClient();
@@ -251,6 +254,30 @@ const ProjectsDataGrid: FC<Props> = ({
 		}
 	}, []);
 
+	const ucoCell: GridColDef = {
+		field: 'author_uco',
+		headerName: 'Uco',
+		headerClassName: 'column--header--theme',
+		filterOperators: containsOnlyFilterOperators,
+		width: 100,
+		valueGetter: params => {
+			const result: string[] = [];
+			if (params.row.author.uco) {
+				result.push(`${params.row.author.uco}`);
+			}
+			return result.join(', ');
+		}
+	};
+	const scoreCell: GridColDef = {
+		field: 'score',
+		headerName: 'Score',
+		headerClassName: 'column--header--theme',
+		filterOperators: undefined,
+		width: 100,
+		valueGetter: params => {
+			return (Math.round(params.row.score * 100) / 100).toFixed(3);
+		}
+	};
 	const columns: GridColDef[] = [
 		{
 			field: 'regCode',
@@ -267,20 +294,7 @@ const ProjectsDataGrid: FC<Props> = ({
 			filterOperators: containsOnlyFilterOperators,
 			minWidth: 200
 		},
-		{
-			field: 'author_uco',
-			headerName: 'Uco',
-			headerClassName: 'column--header--theme',
-			filterOperators: containsOnlyFilterOperators,
-			width: 100,
-			valueGetter: params => {
-				const result: string[] = [];
-				if (params.row.author.uco) {
-					result.push(`${params.row.author.uco}`);
-				}
-				return result.join(', ');
-			}
-		},
+		showScore ? scoreCell : ucoCell,
 		{
 			field: 'department_orgUnit',
 			headerName: 'Unit',
