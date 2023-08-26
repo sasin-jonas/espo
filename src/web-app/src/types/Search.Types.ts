@@ -23,4 +23,5 @@ export type OpportunitySearchResultDto = {
 export type SearchByOpportunityDto = {
 	opportunityId: string;
 	maxResults: number;
+	sortBy: string;
 };
