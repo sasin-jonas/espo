@@ -72,6 +72,7 @@ const RelevantProjectsDetail: FC<Props> = ({ projects, author, children }) => {
 							serverSide={false}
 							rows={projects}
 							administrate={false}
+							showScore
 						></ProjectsDataGrid>
 					</CardContent>
 				</Card>
