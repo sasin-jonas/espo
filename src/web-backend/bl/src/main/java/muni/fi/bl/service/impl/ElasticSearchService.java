@@ -201,8 +201,8 @@ public class ElasticSearchService implements SearchService {
         Map<String, Double> sortedAuthorScores = switch (sortBy) {
             case SUM -> sortAuthorsByScore(authorSumScoresMap, maxResultsCount);
             case MAX -> sortAuthorsByScore(authorMaxScoresMap, maxResultsCount);
-            case COUNT -> sortAuthorsByScore(authorAvgScoresMap, maxResultsCount);
-            case AVG -> sortAuthorsByScore(authorProjectCountMap, maxResultsCount);
+            case AVG -> sortAuthorsByScore(authorAvgScoresMap, maxResultsCount);
+            case COUNT -> sortAuthorsByScore(authorProjectCountMap, maxResultsCount);
         };
         return getOpportunitySearchResultDtos(relevantProjectsByUcoMap, sortedAuthorScores,
                 authorSumScoresMap, authorMaxScoresMap, authorAvgScoresMap);

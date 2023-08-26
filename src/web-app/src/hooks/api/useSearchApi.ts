@@ -146,6 +146,7 @@ export const useSearchByOpportunity = (
 		(searchByOpportunityDto: SearchByOpportunityDto) => {
 			const queryParams: { [k: string]: any } = {};
 			queryParams.maxResults = searchByOpportunityDto.maxResults;
+			queryParams.sortBy = searchByOpportunityDto.sortBy;
 			return postObjectParams(
 				`${apiRoutes.searchUrl}/byOpportunity/${searchByOpportunityDto.opportunityId}`,
 				null,

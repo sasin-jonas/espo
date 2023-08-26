@@ -1,5 +1,13 @@
 import React, { FC, useCallback, useContext, useEffect, useState } from 'react';
-import { Box, Grid, SelectChangeEvent } from '@mui/material';
+import {
+	Box,
+	FormControl,
+	Grid,
+	InputLabel,
+	MenuItem,
+	Select,
+	SelectChangeEvent
+} from '@mui/material';
 import { GridSelectionModel } from '@mui/x-data-grid';
 import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useQueryClient } from 'react-query';
@@ -26,6 +34,8 @@ const SearchByOpportunityPage: FC = () => {
 
 	// max search results
 	const [maxResults, setMaxResults] = useState<number>(10);
+	// sort results by
+	const [sortValue, setSortValue] = useState<string>('MAX');
 
 	const [searchData, setSearchData] = useState<
 		OpportunitySearchResultDto[] | undefined
@@ -53,6 +63,11 @@ const SearchByOpportunityPage: FC = () => {
 		setMaxResults(isNaN(value) ? 10 : value);
 	}, []);
 
+	const handleChangeSortBy = useCallback((event: SelectChangeEvent) => {
+		const value = event.target.value;
+		setSortValue(value);
+	}, []);
+
 	const onGridSelectionChange = (selection: GridSelectionModel) => {
 		if (selection.length > 1) {
 			const result = selection.at(selection.length - 1);
@@ -72,7 +87,8 @@ const SearchByOpportunityPage: FC = () => {
 		try {
 			searchResult = await searchByOpportunityCall.mutateAsync({
 				opportunityId: selectionModel[0] as string,
-				maxResults: maxResults
+				maxResults: maxResults,
+				sortBy: sortValue
 			});
 		} catch {
 			console.error('Failed to perform opportunity search');
@@ -94,6 +110,31 @@ const SearchByOpportunityPage: FC = () => {
 						onChange={handleChangeMaxResults}
 						currentSize={maxResults?.toString()}
 					/>
+				</Grid>
+				<Grid item xs={3}>
+					<FormControl fullWidth>
+						<InputLabel id="paging-label">Sort results by</InputLabel>
+						<Select
+							labelId="sortBy-info-label"
+							id="sortBy-select"
+							value={sortValue ?? 'max'}
+							label="Sort by"
+							onChange={handleChangeSortBy}
+						>
+							<MenuItem key={'max'} value={'MAX'}>
+								Highest project score
+							</MenuItem>
+							<MenuItem key={'sum'} value={'SUM'}>
+								Total project score
+							</MenuItem>
+							<MenuItem key={'avg'} value={'AVG'}>
+								Average project score
+							</MenuItem>
+							<MenuItem key={'count'} value={'COUNT'}>
+								Relevant projects count
+							</MenuItem>
+						</Select>
+					</FormControl>
 				</Grid>
 				<Box sx={{ flexGrow: 1 }} />
 				<Grid item xs={3}>
