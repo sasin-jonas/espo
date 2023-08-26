@@ -40,7 +40,9 @@ const OpportunitySearchResults: FC<Props> = ({ searchResult }) => (
 						<AuthorPreview
 							authorDto={result.authorDto}
 							relevantProjects={result.relevantProjects}
-							aggregateScore={result.aggregateScore}
+							sumScore={result.sumScore}
+							maxScore={result.maxScore}
+							averageScore={result.averageScore}
 							rank={index + 1}
 						></AuthorPreview>
 					</RelevantProjectsDetail>

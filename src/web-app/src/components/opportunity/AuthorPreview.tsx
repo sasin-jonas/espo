@@ -10,7 +10,7 @@ import { OpportunitySearchResultDto } from '../../types/Search.Types';
 const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 	authorDto,
 	relevantProjects,
-	aggregateScore,
+	sumScore,
 	rank
 }) => (
 	<Card sx={{ width: 1, borderRadius: 2 }}>
@@ -49,7 +49,7 @@ const AuthorPreview: FC<OpportunitySearchResultDto> = ({
 				>
 					{relevantProjects.length} relevant projects
 					<br />
-					score: {(Math.round(aggregateScore * 100) / 100).toFixed(2)}
+					score: {(Math.round(sumScore * 100) / 100).toFixed(2)}
 				</Typography>
 			</Box>
 		</CardContent>

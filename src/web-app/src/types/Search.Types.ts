@@ -14,7 +14,9 @@ export type SearchProjectDto = {
 export type OpportunitySearchResultDto = {
 	authorDto: AuthorDto;
 	relevantProjects: ProjectDto[];
-	aggregateScore: number;
+	sumScore: number;
+	averageScore: number;
+	maxScore: number;
 	rank?: number;
 };
 

@@ -2,7 +2,6 @@ package muni.fi.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -62,7 +61,7 @@ public class ProjectDto {
     @Schema(hidden = true)
     private String processedAnnotation;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String uco;
+    @Schema(hidden = true)
+    private Double score;
 
 }

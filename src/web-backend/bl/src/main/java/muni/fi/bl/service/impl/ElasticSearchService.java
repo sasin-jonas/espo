@@ -17,6 +17,7 @@ import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
 import muni.fi.bl.service.RecommendationService;
 import muni.fi.bl.service.SearchService;
+import muni.fi.bl.service.enums.AuthorProjectsSortType;
 import muni.fi.dal.entity.Author;
 import muni.fi.dal.entity.Project;
 import muni.fi.dal.repository.AuthorRepository;
@@ -185,39 +186,86 @@ public class ElasticSearchService implements SearchService {
     }
 
     @Override
-    public List<OpportunitySearchResultDto> searchByOpportunity(String esId, int maxResults) {
+    public List<OpportunitySearchResultDto> searchByOpportunity(String esId, int maxResultsCount, AuthorProjectsSortType sortBy) {
         List<ProjectEsDto> relevantProjects = searchByOpportunityForProjects(esId);
 
-        Map<String, List<ProjectEsDto>> relevantAuthorsByUcoMap = relevantProjects
+        Map<String, List<ProjectEsDto>> relevantProjectsByUcoMap = relevantProjects
                 .stream()
                 .collect(Collectors.groupingBy(ProjectEsDto::getUco));
-        Map<String, Double> authorScoresMap = relevantAuthorsByUcoMap.entrySet().stream()
+        Map<String, Double> authorSumScoresMap = getAuthorSumScores(relevantProjectsByUcoMap);
+        Map<String, Double> authorMaxScoresMap = getAuthorsMaxScores(relevantProjectsByUcoMap);
+        Map<String, Double> authorAvgScoresMap = getAuthorsAvgScores(relevantProjectsByUcoMap);
+        Map<String, Double> authorProjectCountMap = getAuthorsCountScores(relevantProjectsByUcoMap);
+
+        // Sort the authorScores map by value (score) into a LinkedHashMap
+        Map<String, Double> sortedAuthorScores = switch (sortBy) {
+            case SUM -> sortAuthorsByScore(authorSumScoresMap, maxResultsCount);
+            case MAX -> sortAuthorsByScore(authorMaxScoresMap, maxResultsCount);
+            case COUNT -> sortAuthorsByScore(authorAvgScoresMap, maxResultsCount);
+            case AVG -> sortAuthorsByScore(authorProjectCountMap, maxResultsCount);
+        };
+        return getOpportunitySearchResultDtos(relevantProjectsByUcoMap, sortedAuthorScores,
+                authorSumScoresMap, authorMaxScoresMap, authorAvgScoresMap);
+    }
+
+    private Map<String, Double> getAuthorsCountScores(Map<String, List<ProjectEsDto>> relevantProjectsByUcoMap) {
+        return relevantProjectsByUcoMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> Double.valueOf(entry.getValue().size())
+                ));
+    }
+
+    private Map<String, Double> getAuthorsAvgScores(Map<String, List<ProjectEsDto>> relevantProjectsByUcoMap) {
+        return relevantProjectsByUcoMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToDouble(ProjectEsDto::getScore)
+                                .average().orElse(0.0)
+                ));
+    }
+
+    private Map<String, Double> getAuthorsMaxScores(Map<String, List<ProjectEsDto>> relevantProjectsByUcoMap) {
+        return relevantProjectsByUcoMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToDouble(ProjectEsDto::getScore)
+                                .max().orElse(0.0)
+                ));
+    }
+
+    private static Map<String, Double> getAuthorSumScores(Map<String, List<ProjectEsDto>> relevantProjectsByUcoMap) {
+        return relevantProjectsByUcoMap.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> entry.getValue().stream()
                                 .mapToDouble(ProjectEsDto::getScore)
                                 .sum()
                 ));
+    }
 
-        // Sort the authorScores map by value (score) into a LinkedHashMap
-        Map<String, Double> sortedAuthorScores = authorScoresMap.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(maxResults)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (existingValue, newValue) -> newValue,
-                        LinkedHashMap::new
-                ));
+    private List<OpportunitySearchResultDto> getOpportunitySearchResultDtos(
+            Map<String, List<ProjectEsDto>> relevantAuthorsByUcoMap,
+            Map<String, Double> sortedAuthorScoresMap,
+            Map<String, Double> authorSumScoresMap,
+            Map<String, Double> authorMaxScoresMap,
+            Map<String, Double> authorAvgScoresMap) {
+
         List<OpportunitySearchResultDto> sortedResults = new ArrayList<>();
-        sortedAuthorScores.forEach((authorUco, score) -> {
+        sortedAuthorScoresMap.forEach((authorUco, score) -> {
             List<ProjectEsDto> projectEsDtos = relevantAuthorsByUcoMap.get(authorUco);
             projectEsDtos.sort(Comparator.comparingDouble(BaseEsDto::getScore).reversed());
-            List<Project> projects = new LinkedList<>();
+            List<ProjectDto> projects = new LinkedList<>();
             for (var proj : projectEsDtos) {
                 List<Project> projectOptional = projectRepository.findByProjId(proj.getProjId());
                 Optional<Project> first = projectOptional.stream().findFirst();
-                first.ifPresent(projects::add);
+                first.ifPresent(p -> {
+                    ProjectDto projectDto = projectMapper.toDto(p);
+                    projectDto.setScore(proj.getScore());
+                    projects.add(projectDto);
+                });
             }
             Optional<Author> authorOptional = authorRepository.findByUco(authorUco);
             if (authorOptional.isEmpty()) {
@@ -226,10 +274,24 @@ public class ElasticSearchService implements SearchService {
             sortedResults.add(
                     new OpportunitySearchResultDto(
                             authorMapper.toDto(authorOptional.get()),
-                            projectMapper.toDtos(projects),
-                            score));
+                            projects,
+                            authorSumScoresMap.get(authorUco),
+                            authorAvgScoresMap.get(authorUco),
+                            authorMaxScoresMap.get(authorUco)));
         });
         return sortedResults;
+    }
+
+    private static Map<String, Double> sortAuthorsByScore(Map<String, Double> authorScoresMap, int maxResults) {
+        return authorScoresMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(maxResults)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (existingValue, newValue) -> newValue,
+                        LinkedHashMap::new
+                ));
     }
 
     private Query getFilterQuery(String filterField, String filterValue) {
