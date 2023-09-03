@@ -1,4 +1,4 @@
-package muni.fi.bl.exceptions;
+package muni.fi.dtos;
 
 /**
  * Used for error response body. Filled with exception info. Only used for translating custom exceptions

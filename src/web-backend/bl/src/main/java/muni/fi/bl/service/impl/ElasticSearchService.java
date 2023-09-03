@@ -259,9 +259,9 @@ public class ElasticSearchService implements SearchService {
             projectEsDtos.sort(Comparator.comparingDouble(BaseEsDto::getScore).reversed());
             List<ProjectDto> projects = new LinkedList<>();
             for (var proj : projectEsDtos) {
-                List<Project> projectOptional = projectRepository.findByProjId(proj.getProjId());
-                Optional<Project> first = projectOptional.stream().findFirst();
-                first.ifPresent(p -> {
+                List<Project> projectsById = projectRepository.findByProjId(proj.getProjId());
+                Optional<Project> firstOptional = projectsById.stream().findFirst();
+                firstOptional.ifPresent(p -> {
                     ProjectDto projectDto = projectMapper.toDto(p);
                     projectDto.setScore(proj.getScore());
                     projects.add(projectDto);
@@ -309,10 +309,9 @@ public class ElasticSearchService implements SearchService {
 
     private List<ProjectEsDto> searchByOpportunityForProjects(String esId) {
         Query titleSearchQuery = queryBuilder.getMoreLikeThisQuery(
-                esId,
-                List.of(DESCRIPTION_FIELD, TITLE_FIELD), CROWDHELIX_INDEX)._toQuery();
-        Query docSearchQuery = queryBuilder.getMoreLikeThisQuery(
                 esId, CROWDHELIX_INDEX)._toQuery();
+        Query docSearchQuery = queryBuilder.getMoreLikeThisQuery(
+                esId, List.of(DESCRIPTION_FIELD), CROWDHELIX_INDEX)._toQuery();
 
         SearchResponse<ProjectEsDto> titleResponse = projectSearchPerformer.
                 getSearchResponse(null, titleSearchQuery, MU_INDEX, ProjectEsDto.class);

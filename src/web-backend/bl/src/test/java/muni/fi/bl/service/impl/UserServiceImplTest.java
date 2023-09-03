@@ -6,6 +6,7 @@ import muni.fi.bl.service.UserService;
 import muni.fi.dal.entity.User;
 import muni.fi.dal.repository.UserRepository;
 import muni.fi.dtos.UserDto;
+import muni.fi.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -105,5 +106,25 @@ class UserServiceImplTest {
 
         // verify
         assertThat(exception.getMessage(), equalTo("User with id 1 not found"));
+    }
+
+    @Test
+    void getAdmins() {
+        // prepare
+        User testAdmin = new User();
+        testAdmin.setName("Admin");
+        UserDto testAdminDto = new UserDto();
+        testAdminDto.setName("Admin");
+        List<User> users = List.of(testAdmin);
+        when(userRepository.findAllByRolesName(Role.ROLE_ADMIN.name())).thenReturn(users);
+        when(userMapper.toDtos(eq(users))).thenReturn(List.of(testAdminDto));
+
+        // tested method
+        List<UserDto> admins = userService.getAdmins();
+
+        // verify
+        assertThat(admins.size(), equalTo(1));
+        assertThat(admins.get(0).getName(), equalTo("Admin"));
+        verify(userRepository).findAllByRolesName(Role.ROLE_ADMIN.name());
     }
 }

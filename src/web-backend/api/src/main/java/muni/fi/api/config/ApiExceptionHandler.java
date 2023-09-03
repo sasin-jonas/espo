@@ -2,8 +2,8 @@ package muni.fi.api.config;
 
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
-import muni.fi.bl.exceptions.ErrorResponseDetail;
 import muni.fi.bl.exceptions.NotFoundException;
+import muni.fi.dtos.ErrorResponseDetail;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
