@@ -24,10 +24,14 @@ import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
 import muni.fi.bl.service.RecommendationService;
 import muni.fi.bl.service.SearchService;
+import muni.fi.bl.service.enums.AuthorProjectsSortType;
+import muni.fi.dal.entity.Author;
+import muni.fi.dal.entity.Project;
 import muni.fi.dal.repository.AuthorRepository;
 import muni.fi.dal.repository.ProjectRepository;
 import muni.fi.dtos.AuthorDto;
 import muni.fi.dtos.OpportunityDto;
+import muni.fi.dtos.OpportunitySearchResultDto;
 import muni.fi.dtos.ProjectDto;
 import muni.fi.dtos.ProjectEsDto;
 import muni.fi.query.SearchInfo;
@@ -44,11 +48,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR;
 import static muni.fi.bl.service.impl.ElasticSearchService.CROWDHELIX_INDEX;
 import static muni.fi.bl.service.impl.ElasticSearchService.DESCRIPTION_FIELD;
 import static muni.fi.bl.service.impl.ElasticSearchService.MAX_DOCS_SIZE;
+import static muni.fi.bl.service.impl.ElasticSearchService.MAX_QUERY_TERMS;
+import static muni.fi.bl.service.impl.ElasticSearchService.MINIMUM_TERMS_MATCH;
+import static muni.fi.bl.service.impl.ElasticSearchService.MIN_DOC_FREQ;
+import static muni.fi.bl.service.impl.ElasticSearchService.MIN_TERM_FREQ;
 import static muni.fi.bl.service.impl.ElasticSearchService.TITLE_FIELD;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -71,7 +80,7 @@ class ElasticSearchServiceTest {
     @Mock
     private SearchResultProcessor<OpportunityDto> resultProcessorMock;
     @Mock
-    private SearchResultProcessor<ProjectEsDto> projectResultProcessor;
+    private SearchResultProcessor<ProjectEsDto> projectResultProcessorMock;
     @Mock
     private ProjectService projectServiceMock;
     @Mock
@@ -79,15 +88,15 @@ class ElasticSearchServiceTest {
     @Mock
     private QueryBuilder queryBuilderMock;
     @Mock
-    private TextNormalizer textNormalizer;
+    private TextNormalizer textNormalizerMock;
     @Mock
-    private AuthorMapper authorMapper;
+    private AuthorMapper authorMapperMock;
     @Mock
-    private AuthorRepository authorRepository;
+    private AuthorRepository authorRepositoryMock;
     @Mock
-    private ProjectRepository projectRepository;
+    private ProjectRepository projectRepositoryMock;
     @Mock
-    private ProjectMapper projectMapper;
+    private ProjectMapper projectMapperMock;
 
     @Captor
     private ArgumentCaptor<SearchInfo> infoCaptor;
@@ -104,9 +113,9 @@ class ElasticSearchServiceTest {
         SearchPerformer<OpportunityDto> opportunitySearchPerformer = new SearchPerformer<>(elasticsearchClientMock);
         SearchPerformer<ProjectEsDto> projectSearchPerformer = new SearchPerformer<>(elasticsearchClientMock);
         searchService = new ElasticSearchService(
-                resultProcessorMock, projectResultProcessor, projectServiceMock,
-                recommendationServiceMock, queryBuilderMock, textNormalizer, authorRepository, authorMapper,
-                projectRepository, projectMapper, opportunitySearchPerformer, projectSearchPerformer);
+                resultProcessorMock, projectResultProcessorMock, projectServiceMock,
+                recommendationServiceMock, queryBuilderMock, textNormalizerMock, authorRepositoryMock, authorMapperMock,
+                projectRepositoryMock, projectMapperMock, opportunitySearchPerformer, projectSearchPerformer);
 
         // setup mocks
         AuthorDto authorDto1 = new AuthorDto("John Doe", "123456", "student");
@@ -226,7 +235,7 @@ class ElasticSearchServiceTest {
         // prepare
         String phrase = "phrase";
         when(queryBuilderMock.getMultiMatchQuery(phrase)).thenReturn(MultiMatchQuery.of(m -> m.query(phrase)));
-        when(textNormalizer.normalize(phrase)).thenReturn(phrase);
+        when(textNormalizerMock.normalize(phrase)).thenReturn(phrase);
         SearchInfo info = new SearchInfo(30, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList(), false, phrase);
 
@@ -234,7 +243,7 @@ class ElasticSearchServiceTest {
         searchService.searchByPhrase(info);
 
         // verify
-        verify(textNormalizer).normalize(phrase);
+        verify(textNormalizerMock).normalize(phrase);
         verify(queryBuilderMock).getMultiMatchQuery(phrase);
         verify(queryBuilderMock).getFilterQuery(info);
         verify(elasticsearchClientMock).search(requestCaptor.capture(), eq(OpportunityDto.class));
@@ -353,5 +362,109 @@ class ElasticSearchServiceTest {
         // verify
         assertThat(exception.getCause(), instanceOf(ElasticsearchException.class));
         assertThat(exception.getMessage(), equalTo("Failed to perform search or no data was found"));
+    }
+
+    @Test
+    void searchByOpportunity() throws IOException {
+        // prepare
+        String someIndex = "someIndex";
+
+        ProjectEsDto project1 = new ProjectEsDto();
+        ProjectEsDto project2 = new ProjectEsDto();
+        ProjectEsDto project3 = new ProjectEsDto();
+        String uco1 = "uco1";
+        String uco2 = "uco2";
+        double score1 = 10.0;
+        double score2 = 20.0;
+        double score3 = 15.0;
+        String proj3Id = "proj3";
+        String proj2Id = "proj2";
+        String proj1Id = "proj1";
+        project1.setScore(score1);
+        project2.setScore(score2);
+        project3.setScore(score3);
+        project1.setUco(uco1);
+        project2.setUco(uco2);
+        project3.setUco(uco1);
+        project1.setProjId(proj1Id);
+        project2.setProjId(proj2Id);
+        project3.setProjId(proj3Id);
+        Hit<ProjectEsDto> hit1 = Hit.of(h -> h
+                .id("abcd")
+                .index(someIndex)
+                .score(score1)
+                .source(project1));
+        Hit<ProjectEsDto> hit2 = Hit.of(h -> h
+                .id("bdca")
+                .index(someIndex)
+                .score(score2)
+                .source(project2));
+        Hit<ProjectEsDto> hit3 = Hit.of(h -> h
+                .id("dcba")
+                .index(someIndex)
+                .score(score3)
+                .source(project3));
+
+        SearchResponse<ProjectEsDto> searchResponse = SearchResponse.of(r -> r
+                .shards(s -> s.failed(0).successful(3).total(3))
+                .took(10)
+                .timedOut(false)
+                .hits(h -> h
+                        .hits(List.of(hit1, hit2, hit3))));
+
+        assert hit1.source() != null;
+        assert hit2.source() != null;
+        assert hit3.source() != null;
+        String someId = "someId";
+
+        MoreLikeThisQuery mltQuery = MoreLikeThisQuery.of(m -> m
+                .fields(List.of(DESCRIPTION_FIELD, TITLE_FIELD))
+                .like(
+                        l -> l.document(d -> d
+                                .index(CROWDHELIX_INDEX)
+                                .id(someId))
+                )
+                .maxQueryTerms(MAX_QUERY_TERMS)
+                .minDocFreq(MIN_DOC_FREQ)
+                .minTermFreq(MIN_TERM_FREQ)
+                .minimumShouldMatch(MINIMUM_TERMS_MATCH));
+        when(queryBuilderMock.getMoreLikeThisQuery(eq(someId),
+                anyList(), eq(CROWDHELIX_INDEX))).thenReturn(mltQuery);
+        when(queryBuilderMock.getMoreLikeThisQuery(someId, CROWDHELIX_INDEX)).thenReturn(mltQuery);
+        when(elasticsearchClientMock.search(any(SearchRequest.class), eq(ProjectEsDto.class))).thenReturn(searchResponse);
+        when(projectResultProcessorMock.aggregateResultsByScore(any())).thenReturn(List.of(hit2.source(), hit3.source(), hit1.source()));
+
+        when(projectRepositoryMock.findByProjId(any())).thenReturn(List.of(new Project()));
+        when(projectMapperMock.toDto(any())).thenReturn(new ProjectDto());
+
+        Author author = new Author();
+        author.setUco(uco1);
+        AuthorDto authorDto = new AuthorDto();
+        authorDto.setUco(uco1);
+        Author author2 = new Author();
+        author2.setUco(uco2);
+        AuthorDto authorDto2 = new AuthorDto();
+        authorDto2.setUco(uco2);
+        when(authorRepositoryMock.findByUco(uco1)).thenReturn(Optional.of(author));
+        when(authorMapperMock.toDto(author)).thenReturn(authorDto);
+        when(authorRepositoryMock.findByUco(uco2)).thenReturn(Optional.of(author2));
+        when(authorMapperMock.toDto(author2)).thenReturn(authorDto2);
+
+        // tested method
+        List<OpportunitySearchResultDto> result1 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.MAX);
+        List<OpportunitySearchResultDto> result2 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.AVG);
+        List<OpportunitySearchResultDto> result3 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.SUM);
+        List<OpportunitySearchResultDto> result4 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.COUNT);
+
+        // verify
+        assertThat(result1.size(), equalTo(2));
+        assertThat(result2.size(), equalTo(2));
+        assertThat(result3.size(), equalTo(2));
+        assertThat(result4.size(), equalTo(2));
+
+        OpportunitySearchResultDto result11 = result1.get(0);
+        OpportunitySearchResultDto result12 = result1.get(1);
+        assertThat(result11.authorDto().getUco(), equalTo(uco2));
+        assertThat(result12.authorDto().getUco(), equalTo(uco1));
     }
 }

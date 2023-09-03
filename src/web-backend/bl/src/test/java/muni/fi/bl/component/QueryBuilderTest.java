@@ -2,6 +2,7 @@ package muni.fi.bl.component;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -205,5 +206,18 @@ class QueryBuilderTest {
 
         // verify
         assertThat(allQuery._queryKind(), equalTo(Query.Kind.MatchAll));
+    }
+
+    @Test
+    void getMatchQuery() {
+        String somePhrase = "somePhrase";
+        
+        // tested method
+        MatchQuery matchQuery = queryBuilder.getMatchQuery(HELIX_FIELD, somePhrase);
+
+        // verify
+        assertThat(matchQuery._queryKind(), equalTo(Query.Kind.Match));
+        assertThat(matchQuery.field(), equalTo(HELIX_FIELD));
+        assertThat(matchQuery.query().stringValue(), equalTo(somePhrase));
     }
 }
