@@ -211,7 +211,7 @@ class QueryBuilderTest {
     @Test
     void getMatchQuery() {
         String somePhrase = "somePhrase";
-        
+
         // tested method
         MatchQuery matchQuery = queryBuilder.getMatchQuery(HELIX_FIELD, somePhrase);
 

@@ -95,11 +95,11 @@ public class QueryBuilder {
     }
 
     /**
-     * Creates a moreLikeThisQuery with an elastic document as parameter. The search is performed among 'title'
-     * and 'description' fields
+     * Creates a moreLikeThisQuery with an elastic document as parameter.
      *
-     * @param index The name of the ElasticSearch index to search in
-     * @param id    The unique identifier of the document in ElasticSearch
+     * @param index  The name of the ElasticSearch index to search in
+     * @param fields The fields to search among
+     * @param id     The unique identifier of the document in ElasticSearch
      * @return The constructed instance of MoreLikeThis query
      */
     public MoreLikeThisQuery getMoreLikeThisQuery(String id, List<String> fields, String index) {
