@@ -1,9 +1,15 @@
 package muni.fi.bl.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
+import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
+import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
 import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
@@ -30,16 +36,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -93,6 +102,7 @@ class ProjectServiceImplTest {
         project2.setAuthor(author2);
         project1.setDepartment(department1);
         project2.setDepartment(department2);
+        project1.setProjId("123");
         loadResult = new ProjectLoadResult(2, 1, 1, List.of(project1, project2));
 
         Author authorReturned1 = new Author("John Doe", "123456", "student");
@@ -201,7 +211,11 @@ class ProjectServiceImplTest {
     }
 
     @Test
-    void deleteAll() {
+    void deleteAll() throws IOException {
+        ElasticsearchIndicesClient elasticsearchIndicesClient = mock(ElasticsearchIndicesClient.class);
+        when(elasticsearchIndicesClient.delete(any(DeleteIndexRequest.class))).thenReturn(mock(DeleteIndexResponse.class));
+        when(elasticsearchClient.indices()).thenReturn(elasticsearchIndicesClient);
+
         // tested method
         projectService.deleteAll();
 
@@ -210,9 +224,13 @@ class ProjectServiceImplTest {
     }
 
     @Test
-    void delete() {
+    void delete() throws IOException {
         // prepare
+        DeleteByQueryResponse deleteByQueryResponse = mock(DeleteByQueryResponse.class);
         when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
+        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+                .thenReturn(deleteByQueryResponse);
+        when(deleteByQueryResponse.deleted()).thenReturn(1L);
 
         // tested method
         projectService.delete(1L);
@@ -232,6 +250,38 @@ class ProjectServiceImplTest {
 
         // verify
         assertThat(exception.getMessage(), equalTo("Project with id 1 doesn't exist"));
+    }
+
+    @Test
+    void deleteElasticNotFound() throws IOException {
+        // prepare
+        DeleteByQueryResponse deleteByQueryResponse = mock(DeleteByQueryResponse.class);
+        when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
+        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+                .thenReturn(deleteByQueryResponse);
+        when(deleteByQueryResponse.deleted()).thenReturn(0L);
+
+        // tested method
+        Throwable exception = assertThrows(NotFoundException.class, () ->
+                projectService.delete(1L));
+
+        // verify
+        assertThat(exception.getMessage(), equalTo("Couldn't delete documents with projId '123' from ElasticSearch"));
+    }
+
+    @Test
+    void deleteElasticException() throws IOException {
+        // prepare
+        when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
+        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+                .thenThrow(new IOException());
+
+        // tested method
+        Throwable exception = assertThrows(ConnectionException.class, () ->
+                projectService.delete(1L));
+
+        // verify
+        assertThat(exception.getMessage(), equalTo(ELASTIC_CONNECTION_ERROR));
     }
 
     @Test

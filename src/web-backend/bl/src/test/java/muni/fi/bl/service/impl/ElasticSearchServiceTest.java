@@ -451,20 +451,30 @@ class ElasticSearchServiceTest {
         when(authorMapperMock.toDto(author2)).thenReturn(authorDto2);
 
         // tested method
-        List<OpportunitySearchResultDto> result1 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.MAX);
-        List<OpportunitySearchResultDto> result2 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.AVG);
-        List<OpportunitySearchResultDto> result3 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.SUM);
-        List<OpportunitySearchResultDto> result4 = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.COUNT);
+        List<OpportunitySearchResultDto> result1MAX = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.MAX);
+        List<OpportunitySearchResultDto> result2AVG = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.AVG);
+        List<OpportunitySearchResultDto> result3SUM = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.SUM);
+        List<OpportunitySearchResultDto> result4COUNT = searchService.searchByOpportunity(someId, 20, AuthorProjectsSortType.COUNT);
 
         // verify
-        assertThat(result1.size(), equalTo(2));
-        assertThat(result2.size(), equalTo(2));
-        assertThat(result3.size(), equalTo(2));
-        assertThat(result4.size(), equalTo(2));
+        assertThat(result1MAX.size(), equalTo(2));
+        assertThat(result2AVG.size(), equalTo(2));
+        assertThat(result3SUM.size(), equalTo(2));
+        assertThat(result4COUNT.size(), equalTo(2));
 
-        OpportunitySearchResultDto result11 = result1.get(0);
-        OpportunitySearchResultDto result12 = result1.get(1);
+        OpportunitySearchResultDto result11 = result1MAX.get(0);
+        OpportunitySearchResultDto result12 = result1MAX.get(1);
         assertThat(result11.authorDto().getUco(), equalTo(uco2));
         assertThat(result12.authorDto().getUco(), equalTo(uco1));
+
+        OpportunitySearchResultDto result21 = result2AVG.get(0);
+        OpportunitySearchResultDto result22 = result2AVG.get(1);
+        assertThat(result21.authorDto().getUco(), equalTo(uco2));
+        assertThat(result22.authorDto().getUco(), equalTo(uco1));
+
+        OpportunitySearchResultDto result31 = result3SUM.get(0);
+        OpportunitySearchResultDto result32 = result3SUM.get(1);
+        assertThat(result31.authorDto().getUco(), equalTo(uco1));
+        assertThat(result32.authorDto().getUco(), equalTo(uco2));
     }
 }
