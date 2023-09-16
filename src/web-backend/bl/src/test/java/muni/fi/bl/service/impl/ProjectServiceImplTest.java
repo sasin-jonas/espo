@@ -1,5 +1,6 @@
 package muni.fi.bl.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
@@ -60,6 +61,8 @@ class ProjectServiceImplTest {
     private ProjectMapper projectMapperMock;
     @Mock
     private ElasticLoaderAccessor elasticLoaderAccessor;
+    @Mock
+    private ElasticsearchClient elasticsearchClient;
 
     @Captor
     private ArgumentCaptor<Specification<Project>> specificationCaptor;
@@ -78,7 +81,7 @@ class ProjectServiceImplTest {
         openMocks(this);
 
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                Mappers.getMapper(ProjectMapper.class), csvParserMock, elasticLoaderAccessor);
+                Mappers.getMapper(ProjectMapper.class), csvParserMock, elasticLoaderAccessor, elasticsearchClient);
 
         Author author1 = new Author("John Doe", "123456", "student");
         Author author2 = new Author("Jenna Doe", "654321", "employee");
@@ -158,7 +161,7 @@ class ProjectServiceImplTest {
     void getById() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
         when(projectRepositoryMock.findById(eq(1L))).thenReturn(Optional.of(project1));
 
         // tested method
@@ -185,7 +188,7 @@ class ProjectServiceImplTest {
     void getByAuthorUco() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
         List<Project> projects = List.of(this.project1, project2);
         when(projectRepositoryMock.findByAuthorUco(eq("uco"))).thenReturn(projects);
 
@@ -240,7 +243,7 @@ class ProjectServiceImplTest {
         when(projectMapperMock.toDto(any())).thenReturn(dto);
         when(projectMapperMock.toEntity(any())).thenReturn(entity);
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
         ProjectUpdateDto updateDto = new ProjectUpdateDto("id", "regCode", "title", new AuthorDto(),
                 "role", new DepartmentDto(), "annotation");
 
