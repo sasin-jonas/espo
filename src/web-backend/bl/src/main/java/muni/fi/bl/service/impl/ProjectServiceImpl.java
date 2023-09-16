@@ -19,7 +19,6 @@ import muni.fi.dtos.ProjectDto;
 import muni.fi.dtos.ProjectUpdateDto;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +45,6 @@ public class ProjectServiceImpl implements ProjectService {
     private final DepartmentRepository departmentRepository;
     private final ProjectMapper projectMapper;
     private final ProjectParser csvParser;
-    private final ProjectParser jsonParser;
     private final ElasticLoaderAccessor elasticLoaderAccessor;
 
     @Autowired
@@ -54,14 +52,12 @@ public class ProjectServiceImpl implements ProjectService {
                               AuthorRepository authorRepository,
                               DepartmentRepository departmentRepository,
                               ProjectMapper projectMapper,
-                              @Qualifier("csvParser") ProjectParser csvParser,
-                              @Qualifier("jsonParser") ProjectParser jsonParser,
+                              ProjectParser csvParser,
                               ElasticLoaderAccessor elasticLoaderAccessor) {
         this.projectRepository = projectRepository;
         this.authorRepository = authorRepository;
         this.departmentRepository = departmentRepository;
         this.projectMapper = projectMapper;
-        this.jsonParser = jsonParser;
         this.csvParser = csvParser;
         this.elasticLoaderAccessor = elasticLoaderAccessor;
     }
@@ -72,14 +68,6 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("Loading projects from csv");
 
         return loadProjects(csvParser, stream, originalFilename);
-    }
-
-    @Override
-    @Transactional
-    public ProjectLoadResult loadProjectsFromJson(InputStream jsonFile, String originalFilename) {
-        log.info("Loading projects from json");
-
-        return loadProjects(jsonParser, jsonFile, originalFilename);
     }
 
     @Override
@@ -172,11 +160,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public String getSampleCsvContent() {
         return csvParser.getSample();
-    }
-
-    @Override
-    public String getSampleJsonContent() {
-        return jsonParser.getSample();
     }
 
     private ProjectLoadResult loadProjects(ProjectParser parser, InputStream stream, String originalFilename) {

@@ -37,12 +37,7 @@ const UploadButtons: FC<Props> = ({
 				variant="text"
 			>
 				Select file
-				<input
-					type="file"
-					accept=".csv, .json"
-					hidden
-					onInput={handleFileUpload}
-				/>
+				<input type="file" accept=".csv" hidden onInput={handleFileUpload} />
 			</Button>
 			{isLoading ? (
 				<CircularProgress />

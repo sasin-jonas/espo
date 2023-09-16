@@ -14,7 +14,6 @@ import usePageTitle from '../hooks/usePageTitle';
 import useLoggedInUser from '../hooks/useLoggedInUser';
 import {
 	useGetSampleCsv,
-	useGetSampleJson,
 	useUploadAndReplaceProjects,
 	useUploadNewProjects
 } from '../hooks/api/useProjectsApi';
@@ -43,7 +42,6 @@ const ProjectsPage: FC = () => {
 	const uploadNewCall = useUploadNewProjects(token, qc, setAlertOptions);
 	const uploadAllCall = useUploadAndReplaceProjects(token, qc, setAlertOptions);
 	const getSampleCsvCall = useGetSampleCsv(token, setAlertOptions);
-	const getSampleJsonCall = useGetSampleJson(token, setAlertOptions);
 
 	// helpers
 	const isAdmin = useCallback(
@@ -78,7 +76,7 @@ const ProjectsPage: FC = () => {
 			setFilename(message);
 			setFile(null);
 		} else {
-			setFilename('Please select a json or csv file first');
+			setFilename('Please select a csv file first');
 		}
 	};
 
@@ -97,7 +95,7 @@ const ProjectsPage: FC = () => {
 			setFilename(message);
 			setFile(null);
 		} else {
-			setFilename('Please select a json or csv file first');
+			setFilename('Please select a csv file first');
 		}
 	};
 
@@ -110,17 +108,6 @@ const ProjectsPage: FC = () => {
 			return;
 		}
 		handleDownload(data, 'text/csv', 'csv');
-	};
-
-	const handleJsonDownload = async () => {
-		let data: AxiosResponse<Blob>;
-		try {
-			data = await getSampleJsonCall.mutateAsync();
-		} catch {
-			console.error('Failed to download sample JSON file');
-			return;
-		}
-		handleDownload(data, 'application/json', 'json');
 	};
 
 	return isAdmin() ? (
@@ -147,12 +134,6 @@ const ProjectsPage: FC = () => {
 					onClick={() => handleCsvDownload()}
 				>
 					Download sample CSV
-				</Button>
-				<Button
-					sx={{ mr: 1, color: 'black', fontSize: 10 }}
-					onClick={() => handleJsonDownload()}
-				>
-					Download sample JSON
 				</Button>
 			</UploadButtons>
 			<ProjectsDataGrid selection={false} serverSide administrate />

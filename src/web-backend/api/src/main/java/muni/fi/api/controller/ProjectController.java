@@ -150,16 +150,6 @@ public class ProjectController {
         writeContentToOutputStream(response, sampleContent);
     }
 
-    @Operation(summary = "Download an example JSON file for MU projects")
-    @GetMapping("/example-json")
-    public void downloadExampleJson(HttpServletResponse response) {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setHeader("Content-Disposition", "attachment; filename=example.json");
-
-        String sampleContent = projectService.getSampleJsonContent();
-        writeContentToOutputStream(response, sampleContent);
-    }
-
     private InputStream getInputStream(MultipartFile importFile) {
         InputStream inputStream;
         try {
@@ -173,9 +163,7 @@ public class ProjectController {
     }
 
     private String upload(String fileExtension, InputStream inputStream, String originalFilename) {
-        if (Objects.equals(fileExtension, JSON)) {
-            return getSuccessMessage(projectService.loadProjectsFromJson(inputStream, originalFilename));
-        } else if (Objects.equals(fileExtension, CSV)) {
+        if (Objects.equals(fileExtension, CSV)) {
             return getSuccessMessage(projectService.loadProjectsFromCsv(inputStream, originalFilename));
         } else {
             String message = "Invalid file extension, please use csv or json";

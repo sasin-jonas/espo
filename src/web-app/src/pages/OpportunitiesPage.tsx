@@ -80,7 +80,7 @@ const OpportunitiesPage: FC = () => {
 			setFilename(message);
 			setFile(null);
 		} else {
-			setFilename('Please select a json or csv file first');
+			setFilename('Please select a csv file first');
 		}
 	};
 
@@ -99,7 +99,7 @@ const OpportunitiesPage: FC = () => {
 			setFilename(message);
 			setFile(null);
 		} else {
-			setFilename('Please select a json or csv file first');
+			setFilename('Please select a csv file first');
 		}
 	};
 
