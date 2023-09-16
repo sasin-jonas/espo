@@ -13,7 +13,6 @@ import muni.fi.dal.entity.Project;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,7 +24,6 @@ import java.util.List;
 
 @Component
 @Slf4j
-@Qualifier("csvParser")
 public class CsvProjectParser implements ProjectParser {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("dd.MM.yyyy");

@@ -20,15 +20,6 @@ public interface ProjectService {
     ProjectLoadResult loadProjectsFromCsv(InputStream csvFile, String originalFilename);
 
     /**
-     * Loads projects from JSON represented as an inputStream
-     *
-     * @param jsonFile         InputStream containing JSON data
-     * @param originalFilename The JSON file name
-     * @return Result of the projects parsing. Contains information about the number of successfully parsed projects and other data
-     */
-    ProjectLoadResult loadProjectsFromJson(InputStream jsonFile, String originalFilename);
-
-    /**
      * Used for retrieving projects. Can be paged, filtered, sorted
      *
      * @param page       Page number (starting from 0)
@@ -90,12 +81,5 @@ public interface ProjectService {
      * @return The CSV file sample content as string
      */
     String getSampleCsvContent();
-
-    /**
-     * Returns the sample JSON content
-     *
-     * @return The JSON file sample content as string
-     */
-    String getSampleJsonContent();
 
 }

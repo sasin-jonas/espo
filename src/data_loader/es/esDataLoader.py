@@ -37,7 +37,7 @@ class EsDataLoader:
 
         stream = io.StringIO(file.stream.read().decode(), newline=None)
         csv_reader = csv.DictReader(stream, delimiter=';')
-        upload_result = self.create_bulk_request(csv_reader, es_schema_ch.get('index'))
+        upload_result = self.create_ch_bulk_request(csv_reader, es_schema_ch.get('index'))
 
         self.load_to_elastic(upload_result)
 
@@ -81,9 +81,9 @@ class EsDataLoader:
         self.es.indices.create(index=index, **config, ignore=400)
 
     @staticmethod
-    def create_bulk_request(csv_reader: csv.DictReader, index: str) -> EsUploadResult:
+    def create_ch_bulk_request(csv_reader: csv.DictReader, index: str) -> EsUploadResult:
         """
-        Creates a bulk request for uploading data to Elasticsearch.
+        Creates a bulk request for uploading Crowdhelix data to Elasticsearch.
 
         Args:
            csv_reader (csv.DictReader): A DictReader instance for the CSV data.
@@ -122,7 +122,7 @@ class EsDataLoader:
     @staticmethod
     def create_mu_bulk_request(csv_reader: csv.DictReader, index: str) -> EsUploadResult:
         """
-        Creates a bulk request for uploading data to Elasticsearch.
+        Creates a bulk request for uploading MU data to Elasticsearch.
 
         Args:
            csv_reader (csv.DictReader): A DictReader instance for the CSV data.
@@ -163,7 +163,7 @@ class EsDataLoader:
     @staticmethod
     def rename_field(data: Dict[str, Any], old_name: str, new_name: str) -> None:
         """
-        Parses a field as an integer.
+        Renames the field
 
         Args:
             data

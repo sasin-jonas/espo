@@ -48,7 +48,7 @@ def upload_mu_data() -> str:
 @app.route('/example-csv')
 def download_csv() -> Response:
     """
-    Generates an example CSV file for download.
+    Generates an example CSV file for opportunities download.
     """
 
     csv_content: str = 'ID;title;url;author;institutionName;institutionUrl;helix;role;expertise;description;appendixUrl\n' \

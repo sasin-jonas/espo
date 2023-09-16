@@ -209,31 +209,6 @@ export const useGetSampleCsv = (
 	);
 
 /**
- * Get sample json for projects upload
- * @param token The bearer token
- * @param setAlertOptions The function for setting the alert options
- */
-export const useGetSampleJson = (
-	token: string,
-	setAlertOptions: (
-		value: ((prevState: AppAlertOptions) => AppAlertOptions) | AppAlertOptions
-	) => void
-) =>
-	useMutation<AxiosResponse<Blob>, AxiosError<ErrorResponse>, void>(
-		['sampleJson'],
-		() => getBlob<Blob>(`${apiRoutes.projectsUrl}/example-json`, token),
-		{
-			onError: error => {
-				setAlertOptions({
-					open: true,
-					error,
-					severity: AppAlertTypes.Error
-				});
-			}
-		}
-	);
-
-/**
  * Get all project departments
  * @param token	The bearer token
  */

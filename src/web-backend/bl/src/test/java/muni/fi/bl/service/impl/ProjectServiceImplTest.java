@@ -47,7 +47,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
 class ProjectServiceImplTest {
 
     public static final String DUMMY_FILENAME = "fileName";
-    
+
     @Mock
     private ProjectRepository projectRepositoryMock;
     @Mock
@@ -56,8 +56,6 @@ class ProjectServiceImplTest {
     private DepartmentRepository departmentRepositoryMock;
     @Mock
     private ProjectParser csvParserMock;
-    @Mock
-    private ProjectParser jsonParserMock;
     @Mock
     private ProjectMapper projectMapperMock;
     @Mock
@@ -80,7 +78,7 @@ class ProjectServiceImplTest {
         openMocks(this);
 
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                Mappers.getMapper(ProjectMapper.class), csvParserMock, jsonParserMock, elasticLoaderAccessor);
+                Mappers.getMapper(ProjectMapper.class), csvParserMock, elasticLoaderAccessor);
 
         Author author1 = new Author("John Doe", "123456", "student");
         Author author2 = new Author("Jenna Doe", "654321", "employee");
@@ -131,26 +129,6 @@ class ProjectServiceImplTest {
     }
 
     @Test
-    void loadProjectsFromJson() {
-        // prepare
-        when(jsonParserMock.parseProjects(any())).thenReturn(loadResult);
-
-        // tested method
-        ProjectLoadResult result = projectService.loadProjectsFromJson(InputStream.nullInputStream(), DUMMY_FILENAME);
-
-        // verify
-        assertThat(result, equalTo(loadResult));
-        verify(jsonParserMock).parseProjects(any());
-        verify(authorRepositoryMock, times(2)).findByUco(any());
-        verify(departmentRepositoryMock, times(2)).findByOrgUnitAndDepartmentName(any(), any());
-
-        assertThat(result.projects().get(0).getAuthor().getId(), equalTo(1L));
-        assertThat(result.projects().get(1).getAuthor().getId(), equalTo(2L));
-        assertThat(result.projects().get(0).getDepartment().getId(), equalTo(1L));
-        assertThat(result.projects().get(1).getDepartment().getId(), equalTo(2L));
-    }
-
-    @Test
     void getAll() {
         // prepare
         when(projectRepositoryMock.findAll(any(Specification.class), any(PageRequest.class)))
@@ -180,7 +158,7 @@ class ProjectServiceImplTest {
     void getById() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor);
         when(projectRepositoryMock.findById(eq(1L))).thenReturn(Optional.of(project1));
 
         // tested method
@@ -207,7 +185,7 @@ class ProjectServiceImplTest {
     void getByAuthorUco() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor);
         List<Project> projects = List.of(this.project1, project2);
         when(projectRepositoryMock.findByAuthorUco(eq("uco"))).thenReturn(projects);
 
@@ -262,7 +240,7 @@ class ProjectServiceImplTest {
         when(projectMapperMock.toDto(any())).thenReturn(dto);
         when(projectMapperMock.toEntity(any())).thenReturn(entity);
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, jsonParserMock, elasticLoaderAccessor);
+                projectMapperMock, csvParserMock, elasticLoaderAccessor);
         ProjectUpdateDto updateDto = new ProjectUpdateDto("id", "regCode", "title", new AuthorDto(),
                 "role", new DepartmentDto(), "annotation");
 
@@ -299,12 +277,4 @@ class ProjectServiceImplTest {
         verify(csvParserMock).getSample();
     }
 
-    @Test
-    void getSampleJsonContent() {
-        // tested method
-        projectService.getSampleJsonContent();
-
-        // verify
-        verify(jsonParserMock).getSample();
-    }
 }
