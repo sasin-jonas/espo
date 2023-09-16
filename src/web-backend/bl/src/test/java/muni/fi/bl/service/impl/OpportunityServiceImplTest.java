@@ -28,6 +28,7 @@ import java.util.Optional;
 import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR;
 import static muni.fi.bl.service.impl.ElasticSearchService.CROWDHELIX_INDEX;
 import static muni.fi.bl.service.impl.OpportunityServiceImpl.EXAMPLE_CSV_URL;
+import static muni.fi.bl.service.impl.OpportunityServiceImpl.UPLOAD_URL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -189,5 +190,21 @@ class OpportunityServiceImplTest {
         // verify
         assertThat(exception.getCause(), instanceOf(HttpClientErrorException.class));
         assertThat(exception.getMessage(), equalTo("Failed to download sample CSV"));
+    }
+
+    @Test
+    void load() {
+        // prepare
+        String expected = "Result";
+        String fileName = "fileName";
+        String data = "xxx";
+        when(elasticLoaderAccessor.sendDataToElasticLoader(fileName, data.getBytes(), UPLOAD_URL))
+                .thenReturn(expected);
+
+        // tested method
+        String result = opportunityService.load(fileName, data.getBytes());
+
+        // verify
+        assertThat(result, equalTo(expected));
     }
 }

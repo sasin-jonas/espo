@@ -155,7 +155,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Transactional
     public void delete(Long id) {
         Optional<Project> project = projectRepository.findById(id);
         if (project.isEmpty()) {
@@ -244,7 +243,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             // Check the response status.
             if (deleteByQueryResponse.deleted() != null && deleteByQueryResponse.deleted() != 1) {
-                String message = String.format("Couldn't delete documents with projId '%s'", projId);
+                String message = String.format("Couldn't delete documents with projId '%s' from ElasticSearch", projId);
                 log.warn(message);
                 throw new NotFoundException(message);
             }
