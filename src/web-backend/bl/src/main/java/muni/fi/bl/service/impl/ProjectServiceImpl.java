@@ -1,10 +1,18 @@
 package muni.fi.bl.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
 import muni.fi.bl.exceptions.AppException;
+import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
 import muni.fi.bl.mappers.ProjectMapper;
 import muni.fi.bl.service.ProjectService;
@@ -34,11 +42,15 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
+import static muni.fi.bl.exceptions.ConnectionException.ELASTIC_CONNECTION_ERROR;
+import static muni.fi.bl.service.impl.ElasticSearchService.MU_INDEX;
+
 @Service
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
 
     public static final String UPLOAD_ENDPOINT = "/loadMuProjects";
+    public static final String PROJ_ID_FIELD = "projId";
 
     private final ProjectRepository projectRepository;
     private final AuthorRepository authorRepository;
@@ -46,6 +58,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final ProjectParser csvParser;
     private final ElasticLoaderAccessor elasticLoaderAccessor;
+    private final ElasticsearchClient elasticsearchClient;
 
     @Autowired
     public ProjectServiceImpl(ProjectRepository projectRepository,
@@ -53,13 +66,15 @@ public class ProjectServiceImpl implements ProjectService {
                               DepartmentRepository departmentRepository,
                               ProjectMapper projectMapper,
                               ProjectParser csvParser,
-                              ElasticLoaderAccessor elasticLoaderAccessor) {
+                              ElasticLoaderAccessor elasticLoaderAccessor,
+                              ElasticsearchClient elasticsearchClient) {
         this.projectRepository = projectRepository;
         this.authorRepository = authorRepository;
         this.departmentRepository = departmentRepository;
         this.projectMapper = projectMapper;
         this.csvParser = csvParser;
         this.elasticLoaderAccessor = elasticLoaderAccessor;
+        this.elasticsearchClient = elasticsearchClient;
     }
 
     @Override
@@ -122,12 +137,25 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
         log.info("Deleting all projects");
         projectRepository.deleteAll();
+
+        DeleteIndexRequest deleteRequest = DeleteIndexRequest.of(b -> b
+                .index(MU_INDEX)
+                .allowNoIndices(true)
+                .ignoreUnavailable(true));
+        try {
+            elasticsearchClient.indices().delete(deleteRequest);
+        } catch (IOException e) {
+            log.error(ELASTIC_CONNECTION_ERROR, e);
+            throw new ConnectionException(ELASTIC_CONNECTION_ERROR, e);
+        }
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         Optional<Project> project = projectRepository.findById(id);
         if (project.isEmpty()) {
@@ -135,7 +163,9 @@ public class ProjectServiceImpl implements ProjectService {
             log.warn(message);
             throw new NotFoundException(message);
         }
+        String projId = project.get().getProjId();
         projectRepository.deleteById(id);
+        deleteProjectByIdInElastic(projId);
     }
 
     @Override
@@ -193,5 +223,34 @@ public class ProjectServiceImpl implements ProjectService {
 
         author.ifPresent(project::setAuthor);
         department.ifPresent(project::setDepartment);
+    }
+
+    private void deleteProjectByIdInElastic(String projId) {
+        // Create a DeleteByQueryRequest to delete documents by 'projId' field.
+        TermsQuery.Builder termsQueryBuilder = new TermsQuery.Builder();
+        TermsQueryField termsQueryField = TermsQueryField.of(t -> t
+                .value(List.of(FieldValue.of(projId))));
+        termsQueryBuilder
+                .field(PROJ_ID_FIELD)
+                .terms(termsQueryField);
+        DeleteByQueryRequest deleteByQueryRequest = DeleteByQueryRequest.of(q ->
+                q.index(MU_INDEX)
+                        .query(
+                                termsQueryBuilder.build()._toQuery()
+                        ));
+        try {
+            // Perform delete by query operation.
+            DeleteByQueryResponse deleteByQueryResponse = elasticsearchClient.deleteByQuery(deleteByQueryRequest);
+
+            // Check the response status.
+            if (deleteByQueryResponse.deleted() != null && deleteByQueryResponse.deleted() != 1) {
+                String message = String.format("Couldn't delete documents with projId '%s'", projId);
+                log.warn(message);
+                throw new NotFoundException(message);
+            }
+        } catch (IOException e) {
+            log.error(ELASTIC_CONNECTION_ERROR, e);
+            throw new ConnectionException(ELASTIC_CONNECTION_ERROR, e);
+        }
     }
 }

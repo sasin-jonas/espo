@@ -38,7 +38,6 @@ import static muni.fi.api.helper.ResponseHandlerHelper.writeContentToOutputStrea
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class ProjectController {
 
-    public static final String JSON = "json";
     public static final String CSV = "csv";
     private final ProjectService projectService;
 
@@ -130,7 +129,7 @@ public class ProjectController {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @PostMapping(path = "/load-all", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String loadAll(
+    public String loadAndReplace(
             @Parameter(description = "File containing MU projects to upload")
             @RequestParam("file") MultipartFile importFile) {
         log.info("Uploading and replacing MU projects from file {}", importFile.getOriginalFilename());
