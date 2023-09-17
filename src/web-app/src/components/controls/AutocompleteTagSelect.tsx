@@ -1,4 +1,4 @@
-import { FC, SyntheticEvent } from 'react';
+import { FC, Key, SyntheticEvent } from 'react';
 import { Autocomplete, TextField } from '@mui/material';
 
 type Props = {
@@ -7,6 +7,7 @@ type Props = {
 	options: string[];
 	defaultOptions?: string[];
 	onChange: (_: SyntheticEvent, value: string[]) => void;
+	key?: Key;
 };
 
 /**
@@ -23,7 +24,8 @@ const AutocompleteTagSelect: FC<Props> = ({
 	placeHolder,
 	options,
 	onChange,
-	defaultOptions
+	defaultOptions,
+	key
 }) => (
 	<Autocomplete
 		multiple
@@ -35,6 +37,7 @@ const AutocompleteTagSelect: FC<Props> = ({
 		renderInput={params => (
 			<TextField {...params} label={label} placeholder={placeHolder} />
 		)}
+		key={key}
 	/>
 );
 

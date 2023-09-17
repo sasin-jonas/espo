@@ -1,5 +1,11 @@
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
-import { Box, Grid, SelectChangeEvent, TextField } from '@mui/material';
+import {
+	Box,
+	Grid,
+	SelectChangeEvent,
+	TextField,
+	Tooltip
+} from '@mui/material';
 import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useQueryClient } from 'react-query';
 
@@ -17,6 +23,7 @@ import { AppAlertTypes } from '../types/Alert.Types';
 import { useAlert } from '../hooks/useAppAlert';
 import { SearchProjectDto } from '../types/Search.Types';
 import useField from '../hooks/useField';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 /**
  * Search by phrase page
@@ -38,6 +45,7 @@ const SearchByPhrasePage: FC = () => {
 	const [selectedHelixes, setSelectedHelixes] = useState<string[]>([]);
 	const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
 	const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+	const [key, setKey] = useState<number>(1);
 	// max search results
 	const [maxResults, setMaxResults] = useState<number>(10);
 
@@ -72,6 +80,25 @@ const SearchByPhrasePage: FC = () => {
 		}
 	}, [filtersResult.isError]);
 
+	useEffect(() => {
+		document.addEventListener('keydown', handleClearFilters);
+
+		// Don't forget to clean up
+		return function cleanup() {
+			document.removeEventListener('keydown', handleClearFilters);
+		};
+	}, []);
+	const handleClearFilters = (event: { keyCode: number }) => {
+		if (event.keyCode === 113) {
+			// F2 key
+			setSelectedExpertise([]);
+			setSelectedRoles([]);
+			setSelectedHelixes([]);
+			const rnd = Math.floor(Math.random() * (10000 + 1));
+			setKey(rnd);
+		}
+	};
+
 	const handleChangeMaxResults = useCallback((event: SelectChangeEvent) => {
 		const value = Number(event.target.value);
 		setMaxResults(isNaN(value) ? 10 : value);
@@ -98,6 +125,7 @@ const SearchByPhrasePage: FC = () => {
 			helixes: selectedHelixes,
 			phrase: searchPhrase
 		};
+		console.log(searchInfo);
 		let searchResult: OpportunityDto[];
 		try {
 			searchResult = await searchByPhraseCall.mutateAsync(searchInfo);
@@ -111,28 +139,36 @@ const SearchByPhrasePage: FC = () => {
 	return (
 		<>
 			<Grid container spacing={1} sx={{ py: 1 }}>
-				<Grid item xs={4}>
+				<Grid item xs={0.2}>
+					<Tooltip title="Clear all search filters by pressing 'F2'">
+						<QuestionMarkIcon fontSize="small" sx={{ maxHeight: 10 }} />
+					</Tooltip>
+				</Grid>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.helix ?? []}
 						onChange={(_, value) => setSelectedHelixes(value)}
 						label="Select preferred Helixes"
 						placeHolder="Helixes"
+						key={key}
 					/>
 				</Grid>
-				<Grid item xs={4}>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.expertise ?? []}
 						onChange={(_, value) => setSelectedExpertise(value)}
 						label="Select preferred expertise"
 						placeHolder="Expertise"
+						key={key}
 					/>
 				</Grid>
-				<Grid item xs={4}>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.role ?? []}
 						onChange={(_, value) => setSelectedRoles(value)}
 						label="Select preferred role"
 						placeHolder="Roles"
+						key={key}
 					/>
 				</Grid>
 			</Grid>
