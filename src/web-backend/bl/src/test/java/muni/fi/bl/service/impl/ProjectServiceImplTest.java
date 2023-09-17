@@ -1,6 +1,8 @@
 package muni.fi.bl.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
@@ -9,6 +11,7 @@ import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
+import muni.fi.bl.component.QueryBuilder;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
 import muni.fi.bl.mappers.ProjectMapper;
@@ -69,9 +72,11 @@ class ProjectServiceImplTest {
     @Mock
     private ProjectMapper projectMapperMock;
     @Mock
-    private ElasticLoaderAccessor elasticLoaderAccessor;
+    private ElasticLoaderAccessor elasticLoaderAccessorMock;
     @Mock
-    private ElasticsearchClient elasticsearchClient;
+    private ElasticsearchClient elasticsearchClientMock;
+    @Mock
+    private QueryBuilder queryBuilderMock;
 
     @Captor
     private ArgumentCaptor<Specification<Project>> specificationCaptor;
@@ -90,7 +95,7 @@ class ProjectServiceImplTest {
         openMocks(this);
 
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                Mappers.getMapper(ProjectMapper.class), csvParserMock, elasticLoaderAccessor, elasticsearchClient);
+                Mappers.getMapper(ProjectMapper.class), csvParserMock, elasticLoaderAccessorMock, elasticsearchClientMock, queryBuilderMock);
 
         Author author1 = new Author("John Doe", "123456", "student");
         Author author2 = new Author("Jenna Doe", "654321", "employee");
@@ -119,6 +124,10 @@ class ProjectServiceImplTest {
                 .thenReturn(Optional.of(departmentReturned1));
         when(departmentRepositoryMock.findByOrgUnitAndDepartmentName(department2.getOrgUnit(), department2.getDepartmentName()))
                 .thenReturn(Optional.of(departmentReturned2));
+        TermsQuery termsQuery = mock(TermsQuery.class);
+        when(termsQuery._toQuery()).thenReturn(mock(Query.class));
+        when(queryBuilderMock.buildTermsQueryForField(any(), any()))
+                .thenReturn(termsQuery);
     }
 
     @Test
@@ -171,7 +180,7 @@ class ProjectServiceImplTest {
     void getById() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
+                projectMapperMock, csvParserMock, elasticLoaderAccessorMock, elasticsearchClientMock, queryBuilderMock);
         when(projectRepositoryMock.findById(eq(1L))).thenReturn(Optional.of(project1));
 
         // tested method
@@ -198,7 +207,7 @@ class ProjectServiceImplTest {
     void getByAuthorUco() {
         // prepare
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
+                projectMapperMock, csvParserMock, elasticLoaderAccessorMock, elasticsearchClientMock, queryBuilderMock);
         List<Project> projects = List.of(this.project1, project2);
         when(projectRepositoryMock.findByAuthorUco(eq("uco"))).thenReturn(projects);
 
@@ -214,7 +223,7 @@ class ProjectServiceImplTest {
     void deleteAll() throws IOException {
         ElasticsearchIndicesClient elasticsearchIndicesClient = mock(ElasticsearchIndicesClient.class);
         when(elasticsearchIndicesClient.delete(any(DeleteIndexRequest.class))).thenReturn(mock(DeleteIndexResponse.class));
-        when(elasticsearchClient.indices()).thenReturn(elasticsearchIndicesClient);
+        when(elasticsearchClientMock.indices()).thenReturn(elasticsearchIndicesClient);
 
         // tested method
         projectService.deleteAll();
@@ -228,7 +237,7 @@ class ProjectServiceImplTest {
         // prepare
         DeleteByQueryResponse deleteByQueryResponse = mock(DeleteByQueryResponse.class);
         when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
-        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+        when(elasticsearchClientMock.deleteByQuery(any(DeleteByQueryRequest.class)))
                 .thenReturn(deleteByQueryResponse);
         when(deleteByQueryResponse.deleted()).thenReturn(1L);
 
@@ -257,7 +266,7 @@ class ProjectServiceImplTest {
         // prepare
         DeleteByQueryResponse deleteByQueryResponse = mock(DeleteByQueryResponse.class);
         when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
-        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+        when(elasticsearchClientMock.deleteByQuery(any(DeleteByQueryRequest.class)))
                 .thenReturn(deleteByQueryResponse);
         when(deleteByQueryResponse.deleted()).thenReturn(0L);
 
@@ -273,7 +282,7 @@ class ProjectServiceImplTest {
     void deleteElasticException() throws IOException {
         // prepare
         when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(project1));
-        when(elasticsearchClient.deleteByQuery(any(DeleteByQueryRequest.class)))
+        when(elasticsearchClientMock.deleteByQuery(any(DeleteByQueryRequest.class)))
                 .thenThrow(new IOException());
 
         // tested method
@@ -293,7 +302,7 @@ class ProjectServiceImplTest {
         when(projectMapperMock.toDto(any())).thenReturn(dto);
         when(projectMapperMock.toEntity(any())).thenReturn(entity);
         projectService = new ProjectServiceImpl(projectRepositoryMock, authorRepositoryMock, departmentRepositoryMock,
-                projectMapperMock, csvParserMock, elasticLoaderAccessor, elasticsearchClient);
+                projectMapperMock, csvParserMock, elasticLoaderAccessorMock, elasticsearchClientMock, queryBuilderMock);
         ProjectUpdateDto updateDto = new ProjectUpdateDto("id", "regCode", "title", new AuthorDto(),
                 "role", new DepartmentDto(), "annotation");
 
