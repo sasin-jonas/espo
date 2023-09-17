@@ -12,6 +12,7 @@ import {
 	GridColDef,
 	GridFilterItem,
 	GridFilterModel,
+	GridLinkOperator,
 	GridRenderCellParams,
 	GridSelectionModel,
 	GridSortItem,
@@ -41,6 +42,7 @@ import {
 	containsOnlyFilterOperators,
 	filterChangeTimeout,
 	getPageNumber,
+	handleResetAllTableFiltersAndSort,
 	isDescString
 } from '../../utils/utilFunctions';
 import { useAlert } from '../../hooks/useAppAlert';
@@ -49,6 +51,7 @@ import DeleteButtonWithConfirmDialog from '../controls/DeleteButtonWithConfirmDi
 
 import ProjectDetail from './ProjectDetail';
 import ProjectEdit from './ProjectEdit';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
 	rows?: ProjectDto[];
@@ -94,6 +97,13 @@ const ProjectsDataGrid: FC<Props> = ({
 	const [sortOptions, setSortOptions] = useState<GridSortItem | undefined>();
 	const [pageSize, setPageSize] = useState<number>(10);
 	const [page, setPage] = useState<number>(0);
+	const [filterModelPtr, setFilterModelPtr] = useState<GridFilterModel>({
+		items: [],
+		linkOperator: GridLinkOperator.And,
+		quickFilterLogicOperator: GridLinkOperator.And,
+		quickFilterValues: []
+	});
+	const [sortModelPtr, setSortModelPtr] = useState<GridSortModel>([]);
 
 	// specifies if the initial first page request has been made
 	const [filtered, setFiltered] = useState(false);
@@ -175,6 +185,24 @@ const ProjectsDataGrid: FC<Props> = ({
 		checkRemainingTime(remainingTimeRef, timeoutRef);
 	}, [queryOptions]);
 
+	useEffect(() => {
+		const handleKeyDown = async (event: { keyCode: number }) => {
+			await handleResetAllTableFiltersAndSort(
+				event,
+				onFilterChange,
+				'title',
+				onSortChange
+			);
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+
+		// Don't forget to clean up
+		return function cleanup() {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
+
 	const onFilter = async (
 		p?: number,
 		ps?: number,
@@ -226,6 +254,7 @@ const ProjectsDataGrid: FC<Props> = ({
 	};
 
 	const onFilterChange = async (filterModel: GridFilterModel) => {
+		setFilterModelPtr(filterModel);
 		if (filterModel.items.length > 0) {
 			await onFilter(undefined, undefined, undefined, filterModel.items[0]);
 			setQueryOptions(filterModel.items[0] ? filterModel.items[0] : undefined);
@@ -235,6 +264,7 @@ const ProjectsDataGrid: FC<Props> = ({
 	};
 
 	const onSortChange = async (sortModel: GridSortModel) => {
+		setSortModelPtr(sortModel);
 		if (sortModel.length > 0) {
 			await onFilter(undefined, undefined, sortModel[0], undefined);
 			setSortOptions(sortModel[0].field ? sortModel[0] : undefined);
@@ -370,7 +400,12 @@ const ProjectsDataGrid: FC<Props> = ({
 	];
 	return (
 		<Box sx={{ width: '100%' }}>
+			<Tooltip title="Clear all table filters by pressing 'F1'">
+				<QuestionMarkIcon fontSize="small" sx={{ maxHeight: 10 }} />
+			</Tooltip>
 			<DataGrid
+				filterModel={filterModelPtr}
+				sortModel={sortModelPtr}
 				autoHeight
 				rows={projectRows}
 				onSelectionModelChange={(ids: GridSelectionModel) =>
