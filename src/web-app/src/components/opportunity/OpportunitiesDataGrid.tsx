@@ -5,6 +5,7 @@ import {
 	GridColDef,
 	GridFilterItem,
 	GridFilterModel,
+	GridLinkOperator,
 	GridRenderCellParams,
 	GridSelectionModel,
 	GridSortItem,
@@ -29,6 +30,7 @@ import {
 	containsOnlyFilterOperators,
 	filterChangeTimeout,
 	getPageNumber,
+	handleResetAllTableFiltersAndSort,
 	isDescString
 } from '../../utils/utilFunctions';
 import DeleteButtonWithConfirmDialog from '../controls/DeleteButtonWithConfirmDialog';
@@ -37,6 +39,7 @@ import { AppAlertTypes } from '../../types/Alert.Types';
 
 import OpportunityDetail from './OpportunityDetail';
 import { GridInputSelectionModel } from '@mui/x-data-grid/models/gridSelectionModel';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
 	onGridSelectionChange?: (ids: GridSelectionModel) => void;
@@ -69,6 +72,13 @@ const OpportunitiesDataGrid: FC<Props> = ({
 		GridFilterItem | undefined
 	>();
 	const [sortOptions, setSortOptions] = useState<GridSortItem | undefined>();
+	const [filterModelPtr, setFilterModelPtr] = useState<GridFilterModel>({
+		items: [],
+		linkOperator: GridLinkOperator.And,
+		quickFilterLogicOperator: GridLinkOperator.And,
+		quickFilterValues: []
+	});
+	const [sortModelPtr, setSortModelPtr] = useState<GridSortModel>([]);
 
 	// specifies if the initial first page request has been made
 	const [filtered, setFiltered] = useState(false);
@@ -117,6 +127,24 @@ const OpportunitiesDataGrid: FC<Props> = ({
 	useEffect(() => {
 		checkRemainingTime(remainingTimeRef, timeoutRef);
 	}, [queryOptions]);
+	useEffect(() => {
+		const handleKeyDown = async (event: { keyCode: number }) => {
+			await handleResetAllTableFiltersAndSort(
+				event,
+				onFilterChange,
+				'title',
+				onSortChange
+			);
+			await onSortChange([]);
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+
+		// Don't forget to clean up
+		return function cleanup() {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
 
 	const deleteOpportunityHandler = async (value: string | undefined) => {
 		if (value) {
@@ -181,6 +209,7 @@ const OpportunitiesDataGrid: FC<Props> = ({
 	};
 
 	const onFilterChange = async (filterModel: GridFilterModel) => {
+		setFilterModelPtr(filterModel);
 		if (filterModel.items.length > 0) {
 			await onFilter(undefined, undefined, undefined, filterModel.items[0]);
 			setQueryOptions(filterModel.items[0] ? filterModel.items[0] : undefined);
@@ -190,6 +219,7 @@ const OpportunitiesDataGrid: FC<Props> = ({
 	};
 
 	const onSortChange = async (sortModel: GridSortModel) => {
+		setSortModelPtr(sortModel);
 		if (sortModel.length > 0) {
 			await onFilter(undefined, undefined, sortModel[0], undefined);
 
@@ -262,9 +292,15 @@ const OpportunitiesDataGrid: FC<Props> = ({
 			)
 		}
 	];
+
 	return (
 		<Box sx={{ width: '100%' }}>
+			<Tooltip title="Clear all table filters by pressing 'F1'">
+				<QuestionMarkIcon fontSize="small" sx={{ maxHeight: 10 }} />
+			</Tooltip>
 			<DataGrid
+				filterModel={filterModelPtr}
+				sortModel={sortModelPtr}
 				autoHeight
 				rows={rows}
 				columns={columns}

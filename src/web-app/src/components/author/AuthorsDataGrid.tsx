@@ -1,8 +1,16 @@
-import { FC } from 'react';
-import { Box } from '@mui/material';
-import { DataGrid, GridColDef, GridSelectionModel } from '@mui/x-data-grid';
+import { FC, useEffect, useState } from 'react';
+import { Box, Tooltip } from '@mui/material';
+import {
+	DataGrid,
+	GridColDef,
+	GridFilterModel,
+	GridLinkOperator,
+	GridSelectionModel
+} from '@mui/x-data-grid';
 
 import { AuthorDto } from '../../types/Project.Types';
+import { handleResetAllTableFilters } from '../../utils/utilFunctions';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
 	rows: AuthorDto[];
@@ -28,6 +36,30 @@ const AuthorsDataGrid: FC<Props> = ({
 	onPageSizeChange,
 	loading
 }) => {
+	const [filterModelPtr, setFilterModelPtr] = useState<GridFilterModel>({
+		items: [],
+		linkOperator: GridLinkOperator.And,
+		quickFilterLogicOperator: GridLinkOperator.And,
+		quickFilterValues: []
+	});
+
+	useEffect(() => {
+		const handleKeyDown = async (event: { keyCode: number }) => {
+			await handleResetAllTableFilters(event, onFilterChange, 'name');
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+
+		// Don't forget to clean up
+		return function cleanup() {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
+
+	const onFilterChange = async (filterModel: GridFilterModel) => {
+		setFilterModelPtr(filterModel);
+	};
+
 	const columns: GridColDef[] = [
 		{
 			field: 'name',
@@ -46,7 +78,12 @@ const AuthorsDataGrid: FC<Props> = ({
 	];
 	return (
 		<Box sx={{ width: '100%' }}>
+			<Tooltip title="Clear all table filters by pressing 'F1'">
+				<QuestionMarkIcon fontSize="small" sx={{ maxHeight: 10 }} />
+			</Tooltip>
 			<DataGrid
+				filterModel={filterModelPtr}
+				onFilterModelChange={onFilterChange}
 				autoHeight
 				rows={rows}
 				onSelectionModelChange={onGridSelectionChange}

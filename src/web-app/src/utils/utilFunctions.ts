@@ -1,7 +1,10 @@
 import {
 	getGridStringOperators,
 	GridFilterItem,
-	GridSortItem
+	GridFilterModel,
+	GridLinkOperator,
+	GridSortItem,
+	GridSortModel
 } from '@mui/x-data-grid';
 import { MutableRefObject } from 'react';
 import { AxiosResponse } from 'axios';
@@ -83,6 +86,48 @@ export const checkRemainingTime = (
 			remainingTimeRef.current = Date.now() + remainingTime;
 			setTimeout(checkRemainingTime, remainingTime);
 		}
+	}
+};
+
+export const handleResetAllTableFiltersAndSort = async (
+	event: { keyCode: number },
+	onFilterChange: (gridFilterModel: GridFilterModel) => void,
+	field: string,
+	onSortChange: (sortModel: GridSortModel) => Promise<void>
+) => {
+	if (event.keyCode === 112) {
+		await onFilterChange({
+			items: [
+				{
+					columnField: field,
+					operatorValue: 'contains'
+				}
+			],
+			linkOperator: GridLinkOperator.And,
+			quickFilterLogicOperator: GridLinkOperator.And,
+			quickFilterValues: []
+		});
+		await onSortChange([]);
+	}
+};
+
+export const handleResetAllTableFilters = async (
+	event: { keyCode: number },
+	onFilterChange: (gridFilterModel: GridFilterModel) => void,
+	field: string
+) => {
+	if (event.keyCode === 112) {
+		await onFilterChange({
+			items: [
+				{
+					columnField: field,
+					operatorValue: 'contains'
+				}
+			],
+			linkOperator: GridLinkOperator.And,
+			quickFilterLogicOperator: GridLinkOperator.And,
+			quickFilterValues: []
+		});
 	}
 };
 
