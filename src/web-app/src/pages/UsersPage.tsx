@@ -34,13 +34,7 @@ const UsersPage: FC = () => {
 	);
 
 	useEffect(() => {
-		setUserRows(
-			userDataResult.data
-				? userDataResult.data.data.filter(
-						d => d.jwtIdentifier !== user?.jwtIdentifier
-				  )
-				: []
-		);
+		setUserRows(userDataResult.data ? userDataResult.data.data : []);
 	}, [userDataResult.data]);
 
 	useEffect(() => {

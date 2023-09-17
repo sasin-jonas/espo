@@ -40,6 +40,7 @@ const SearchByProjectPage: FC = () => {
 	const [selectedHelixes, setSelectedHelixes] = useState<string[]>([]);
 	const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
 	const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+	const [key, setKey] = useState<number>(1);
 	// selected projects
 	const [selectedRows, setSelectedRows] = useState<number[]>([]);
 	// max search results
@@ -74,6 +75,24 @@ const SearchByProjectPage: FC = () => {
 			});
 		}
 	}, [filtersResult.isError]);
+	useEffect(() => {
+		document.addEventListener('keydown', handleClearFilters);
+
+		// Don't forget to clean up
+		return function cleanup() {
+			document.removeEventListener('keydown', handleClearFilters);
+		};
+	}, []);
+	const handleClearFilters = (event: { keyCode: number }) => {
+		if (event.keyCode === 113) {
+			// F2 key
+			setSelectedExpertise([]);
+			setSelectedRoles([]);
+			setSelectedHelixes([]);
+			const rnd = Math.floor(Math.random() * (10000 + 1));
+			setKey(rnd);
+		}
+	};
 
 	const handleChangeMaxResults = useCallback((event: SelectChangeEvent) => {
 		const value = Number(event.target.value);
@@ -112,28 +131,36 @@ const SearchByProjectPage: FC = () => {
 	return (
 		<>
 			<Grid container spacing={1} sx={{ py: 1 }}>
-				<Grid item xs={4}>
+				<Grid item xs={0.2}>
+					<Tooltip title="Clear all search filters by pressing 'F2'">
+						<QuestionMarkIcon fontSize="small" sx={{ maxHeight: 10 }} />
+					</Tooltip>
+				</Grid>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.helix ?? []}
 						onChange={(_, value) => setSelectedHelixes(value)}
 						label="Select preferred Helixes"
 						placeHolder="Helixes"
+						key={key}
 					/>
 				</Grid>
-				<Grid item xs={4}>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.expertise ?? []}
 						onChange={(_, value) => setSelectedExpertise(value)}
 						label="Select preferred expertise"
 						placeHolder="Expertise"
+						key={key}
 					/>
 				</Grid>
-				<Grid item xs={4}>
+				<Grid item xs={3.9}>
 					<AutocompleteTagSelect
 						options={filterValues.role ?? []}
 						onChange={(_, value) => setSelectedRoles(value)}
 						label="Select preferred role"
 						placeHolder="Roles"
+						key={key}
 					/>
 				</Grid>
 			</Grid>

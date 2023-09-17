@@ -117,6 +117,7 @@ export const handleResetAllTableFilters = async (
 	field: string
 ) => {
 	if (event.keyCode === 112) {
+		// F1 key
 		await onFilterChange({
 			items: [
 				{
