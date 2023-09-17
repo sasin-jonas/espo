@@ -191,7 +191,7 @@ public class QueryBuilder {
         return MatchAllQuery.of(q -> q);
     }
 
-    private TermsQuery buildTermsQueryForField(String field, List<String> filterKeywords) {
+    public TermsQuery buildTermsQueryForField(String field, List<String> filterKeywords) {
         TermsQuery.Builder termsQueryBuilder = new TermsQuery.Builder();
         if (filterKeywords != null) {
             TermsQueryField termsQueryField = TermsQueryField.of(t -> t

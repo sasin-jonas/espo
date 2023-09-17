@@ -1,9 +1,7 @@
 package muni.fi.bl.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
@@ -11,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import muni.fi.bl.ProjectLoadResult;
 import muni.fi.bl.component.ElasticLoaderAccessor;
 import muni.fi.bl.component.ProjectParser;
+import muni.fi.bl.component.QueryBuilder;
 import muni.fi.bl.exceptions.AppException;
 import muni.fi.bl.exceptions.ConnectionException;
 import muni.fi.bl.exceptions.NotFoundException;
@@ -59,6 +58,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectParser csvParser;
     private final ElasticLoaderAccessor elasticLoaderAccessor;
     private final ElasticsearchClient elasticsearchClient;
+    private final QueryBuilder queryBuilder;
 
     @Autowired
     public ProjectServiceImpl(ProjectRepository projectRepository,
@@ -67,7 +67,8 @@ public class ProjectServiceImpl implements ProjectService {
                               ProjectMapper projectMapper,
                               ProjectParser csvParser,
                               ElasticLoaderAccessor elasticLoaderAccessor,
-                              ElasticsearchClient elasticsearchClient) {
+                              ElasticsearchClient elasticsearchClient,
+                              QueryBuilder queryBuilder) {
         this.projectRepository = projectRepository;
         this.authorRepository = authorRepository;
         this.departmentRepository = departmentRepository;
@@ -75,6 +76,7 @@ public class ProjectServiceImpl implements ProjectService {
         this.csvParser = csvParser;
         this.elasticLoaderAccessor = elasticLoaderAccessor;
         this.elasticsearchClient = elasticsearchClient;
+        this.queryBuilder = queryBuilder;
     }
 
     @Override
@@ -226,17 +228,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void deleteProjectByIdInElastic(String projId) {
         // Create a DeleteByQueryRequest to delete documents by 'projId' field.
-        TermsQuery.Builder termsQueryBuilder = new TermsQuery.Builder();
-        TermsQueryField termsQueryField = TermsQueryField.of(t -> t
-                .value(List.of(FieldValue.of(projId))));
-        termsQueryBuilder
-                .field(PROJ_ID_FIELD)
-                .terms(termsQueryField);
+        Query termsQuery = queryBuilder.buildTermsQueryForField(PROJ_ID_FIELD, List.of(projId))
+                ._toQuery();
         DeleteByQueryRequest deleteByQueryRequest = DeleteByQueryRequest.of(q ->
                 q.index(MU_INDEX)
-                        .query(
-                                termsQueryBuilder.build()._toQuery()
-                        ));
+                        .query(termsQuery)
+        );
         try {
             // Perform delete by query operation.
             DeleteByQueryResponse deleteByQueryResponse = elasticsearchClient.deleteByQuery(deleteByQueryRequest);
