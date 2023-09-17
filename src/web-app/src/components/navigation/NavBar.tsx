@@ -8,7 +8,7 @@ import {
 	Toolbar,
 	Typography
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import React, { FC, useCallback, useContext, useState } from 'react';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
@@ -17,6 +17,7 @@ import { ExpandMore } from '@mui/icons-material';
 // @ts-ignore
 import muniLogo from '../../resources/M_logo.png';
 import { useUserInfo } from '../../hooks/useLoggedInUser';
+import SearchIcon from '@mui/icons-material/Search';
 
 /**
  * Navigation bar
@@ -30,6 +31,9 @@ const NavBar: FC = () => {
 	// state
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
+
+	// location
+	const location = useLocation();
 
 	// handlers
 	const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -54,6 +58,7 @@ const NavBar: FC = () => {
 		return false;
 	}, [userInfo]);
 
+	const pagesWithoutSearchNavBtn: string[] = ['/search', '/'];
 	return (
 		<AppBar sx={{ position: 'sticky', top: 0, backgroundColor: '#0000DC' }}>
 			<Container maxWidth="xl" sx={{ height: 1 }}>
@@ -77,6 +82,25 @@ const NavBar: FC = () => {
 							</Typography>
 						</>
 					</Button>
+					<Box sx={{ flexGrow: 1 }} />
+					{!pagesWithoutSearchNavBtn.includes(location.pathname) &&
+						idTokenData && (
+							<Button
+								component={Link}
+								to="/search"
+								sx={{
+									backgroundColor: '#0000DC',
+									color: '#ffffff'
+								}}
+								variant="contained"
+							>
+								<Typography fontSize={12} fontWeight={20}>
+									Let&apos;s search
+								</Typography>
+								<Box sx={{ flexGrow: 0.5 }} />
+								<SearchIcon fontSize="medium" />
+							</Button>
+						)}
 					<Box sx={{ flexGrow: 1 }} />
 					{isAdmin() && idTokenData && (
 						<>
