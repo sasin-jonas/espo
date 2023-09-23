@@ -7,9 +7,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import muni.fi.api.config.UserConfigProperties;
 import muni.fi.bl.config.ApiConfigProperties;
+import muni.fi.bl.service.MailService;
+import muni.fi.bl.service.UserService;
 import muni.fi.dal.entity.Role;
 import muni.fi.dal.entity.User;
 import muni.fi.dal.repository.UserRepository;
+import muni.fi.dtos.UserDto;
 import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static muni.fi.enums.Role.ROLE_ADMIN;
 import static muni.fi.enums.Role.ROLE_USER;
@@ -42,19 +46,26 @@ import static muni.fi.enums.Role.ROLE_USER;
 @Component
 public class UserFilter extends OncePerRequestFilter {
 
+    public static final String NEW_USER_MAIL_SUBJECT = "ESPO - new user";
     private final UserRepository userRepository;
     private final UserConfigProperties userConfigProperties;
     private final RestTemplate restTemplate;
     private final ApiConfigProperties apiConfigProperties;
+    private final MailService mailService;
+    private final UserService userService;
 
     public UserFilter(UserRepository userRepository,
                       UserConfigProperties userConfigProperties,
                       RestTemplate restTemplate,
-                      ApiConfigProperties apiConfigProperties) {
+                      ApiConfigProperties apiConfigProperties,
+                      MailService mailService,
+                      UserService userService) {
         this.userRepository = userRepository;
         this.userConfigProperties = userConfigProperties;
         this.restTemplate = restTemplate;
         this.apiConfigProperties = apiConfigProperties;
+        this.mailService = mailService;
+        this.userService = userService;
     }
 
     @Override
@@ -103,10 +114,30 @@ public class UserFilter extends OncePerRequestFilter {
                 Role adminRole = new Role(ROLE_ADMIN.name());
                 Role userRole = new Role(ROLE_USER.name());
                 newUser.setRoles(Set.of(adminRole, userRole));
+            } else {
+                CompletableFuture.runAsync(
+                        () -> sendEmailToAdministrators(newUser)
+                );
             }
+
             return userRepository.saveAndFlush(newUser);
         }
         return user.get();
+    }
+
+    private void sendEmailToAdministrators(User newUser) {
+        List<String> adminEmails = userService.getAdmins()
+                .stream()
+                .map(UserDto::getEmail)
+                .toList();
+        if (adminEmails.isEmpty()) {
+            return;
+        }
+        mailService.send(NEW_USER_MAIL_SUBJECT,
+                String.format("A new user '%s' with email '%s' has just signed into the ESPO application",
+                        newUser.getName(),
+                        newUser.getEmail()),
+                adminEmails);
     }
 
     @SneakyThrows(URISyntaxException.class)

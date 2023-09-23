@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import muni.fi.api.config.UserConfigProperties;
 import muni.fi.bl.config.ApiConfigProperties;
+import muni.fi.bl.service.MailService;
+import muni.fi.bl.service.UserService;
 import muni.fi.dal.entity.Role;
 import muni.fi.dal.entity.User;
 import muni.fi.dal.repository.UserRepository;
@@ -61,6 +63,10 @@ class UserFilterTest {
     private FilterChain filterChainMock;
     @Mock
     private ApiConfigProperties apiConfigProperties;
+    @Mock
+    private MailService mailServiceMock;
+    @Mock
+    private UserService userServiceMock;
 
     @Captor
     private ArgumentCaptor<User> userEntityCaptor;
@@ -79,7 +85,8 @@ class UserFilterTest {
         openMocks(this);
 
         when(apiConfigProperties.getIssuerUserinfoUri()).thenReturn("http://localhost");
-        userFilter = new UserFilter(userRepositoryMock, userConfigPropertiesMock, restTemplateMock, apiConfigProperties);
+        userFilter = new UserFilter(userRepositoryMock, userConfigPropertiesMock,
+                restTemplateMock, apiConfigProperties, mailServiceMock, userServiceMock);
 
         responseBody = """
                 {
