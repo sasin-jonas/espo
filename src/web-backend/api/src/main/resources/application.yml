@@ -33,6 +33,19 @@ spring:
   mvc:
     log-request-details: true
 
+  # email properties
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "jonasssn@gmail.com"
+    password: "xxxxxxxxxxx"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   servlet:
     context-path: '/api'
