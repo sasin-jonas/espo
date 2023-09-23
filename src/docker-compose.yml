@@ -55,6 +55,10 @@ services:
       - APP_ELASTIC_HOSTNAME=elasticsearch
       - APP_ELASTIC_PORT=9200
       - APP_STOPWORDS_FILE=stopwords.txt
+      - APP_EMAIL_HOST=smtp.gmail.com
+      - APP_EMAIL_PORT=25
+      - APP_EMAIL_USERNAME=uco@mail.muni.cz
+      - APP_EMAIL_PASSWORD=password
     depends_on:
       - postgres
       - elasticsearch
