@@ -1,18 +1,15 @@
-import { FC, useCallback, useContext, useEffect, useState } from 'react';
-import { Box, Grid, SelectChangeEvent, Tooltip } from '@mui/material';
-import { GridSelectionModel } from '@mui/x-data-grid';
-import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
-import { useQueryClient } from 'react-query';
-import { AxiosResponse } from 'axios';
+import {FC, useCallback, useContext, useEffect, useState} from 'react';
+import {Box, Grid, SelectChangeEvent, Tooltip} from '@mui/material';
+import {GridSelectionModel} from '@mui/x-data-grid';
+import {AuthContext, IAuthContext} from 'react-oauth2-code-pkce';
+import {useQueryClient} from 'react-query';
+import {AxiosResponse} from 'axios';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 import usePageTitle from '../hooks/usePageTitle';
-import { AuthorDto, ProjectDto } from '../types/Project.Types';
-import {
-	useGetAllAuthors,
-	useGetProjectsByAuthor
-} from '../hooks/api/useProjectsApi';
-import { OpportunityDto } from '../types/Opportunity.Types';
+import {AuthorDto, ProjectDto} from '../types/Project.Types';
+import {useGetAllAuthors, useGetProjectsByAuthor} from '../hooks/api/useProjectsApi';
+import {OpportunityDto} from '../types/Opportunity.Types';
 import AutocompleteTagSelect from '../components/controls/AutocompleteTagSelect';
 import MaxResultsComboBox from '../components/controls/MaxResultsComboBox';
 import CheckBoxWithLabel from '../components/controls/CheckBoxWithLabel';
@@ -20,13 +17,10 @@ import SearchButton from '../components/controls/SearchButton';
 import SearchResults from '../components/display/SearchResults';
 import AuthorsDataGrid from '../components/author/AuthorsDataGrid';
 import ProjectsDataGrid from '../components/project/ProjectsDataGrid';
-import {
-	useGetAllFilterValues,
-	useSearchByAuthors
-} from '../hooks/api/useSearchApi';
-import { AppAlertTypes } from '../types/Alert.Types';
-import { useAlert } from '../hooks/useAppAlert';
-import { SearchProjectDto } from '../types/Search.Types';
+import {useGetAllFilterValues, useSearchByAuthors} from '../hooks/api/useSearchApi';
+import {AppAlertTypes} from '../types/Alert.Types';
+import {useAlert} from '../hooks/useAppAlert';
+import {SearchProjectDto} from '../types/Search.Types';
 
 /**
  * Search by project authors page
@@ -240,6 +234,7 @@ const SearchByProjectAuthorsPage: FC = () => {
 					onGridSelectionChange={ids => onAuthorGridSelectionChange(ids)}
 					onPageSizeChange={newSize => setAuthorPageSize(newSize)}
 					loading={authorRowsResult.isLoading}
+					selectionModel={selectedAuthorRows.map(a => a.id)}
 				/>
 			</Box>
 			<Grid container justifyContent="left" spacing={3}>
@@ -273,6 +268,7 @@ const SearchByProjectAuthorsPage: FC = () => {
 							selection
 							serverSide={false}
 							administrate={false}
+							selectionModel={selectedProjectRows}
 						/>
 					</Grid>
 				)}

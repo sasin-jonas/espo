@@ -3,11 +3,12 @@ import {
 	GridFilterItem,
 	GridFilterModel,
 	GridLinkOperator,
+	GridSelectionModel,
 	GridSortItem,
 	GridSortModel
 } from '@mui/x-data-grid';
-import { MutableRefObject } from 'react';
-import { AxiosResponse } from 'axios';
+import {MutableRefObject} from 'react';
+import {AxiosResponse} from 'axios';
 
 export const filterChangeTimeout = 1000;
 
@@ -93,7 +94,8 @@ export const handleResetAllTableFiltersAndSort = async (
 	event: { keyCode: number },
 	onFilterChange: (gridFilterModel: GridFilterModel) => void,
 	field: string,
-	onSortChange: (sortModel: GridSortModel) => Promise<void>
+	onSortChange: (sortModel: GridSortModel) => Promise<void>,
+	onSelectionModelChange: ((ids: GridSelectionModel) => void) | undefined
 ) => {
 	if (event.keyCode === 112) {
 		await onFilterChange({
@@ -108,14 +110,15 @@ export const handleResetAllTableFiltersAndSort = async (
 			quickFilterValues: []
 		});
 		await onSortChange([]);
+		onSelectionModelChange ? onSelectionModelChange([]) : console.log("empty selection model");
 	}
 };
 
 export const handleResetAllTableFilters = async (
 	event: { keyCode: number },
 	onFilterChange: (gridFilterModel: GridFilterModel) => void,
-	field: string
-) => {
+	field: string,
+	onGridSelectionChange: undefined | ((ids: GridSelectionModel) => void)) => {
 	if (event.keyCode === 112) {
 		// F1 key
 		await onFilterChange({
@@ -129,6 +132,7 @@ export const handleResetAllTableFilters = async (
 			quickFilterLogicOperator: GridLinkOperator.And,
 			quickFilterValues: []
 		});
+		onGridSelectionChange ? onGridSelectionChange([]) : console.log("no selection model");
 	}
 };
 
