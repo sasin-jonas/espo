@@ -1,15 +1,9 @@
-import { FC, useEffect, useState } from 'react';
-import { Box, Tooltip } from '@mui/material';
-import {
-	DataGrid,
-	GridColDef,
-	GridFilterModel,
-	GridLinkOperator,
-	GridSelectionModel
-} from '@mui/x-data-grid';
+import {FC, useEffect, useState} from 'react';
+import {Box, Tooltip} from '@mui/material';
+import {DataGrid, GridColDef, GridFilterModel, GridLinkOperator, GridSelectionModel} from '@mui/x-data-grid';
 
-import { AuthorDto } from '../../types/Project.Types';
-import { handleResetAllTableFilters } from '../../utils/utilFunctions';
+import {AuthorDto} from '../../types/Project.Types';
+import {handleResetAllTableFilters} from '../../utils/utilFunctions';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
@@ -18,6 +12,7 @@ type Props = {
 	loading: boolean;
 	onGridSelectionChange: (ids: GridSelectionModel) => void;
 	onPageSizeChange: (size: number) => void;
+	selectionModel?: GridSelectionModel;
 };
 
 /**
@@ -27,6 +22,7 @@ type Props = {
  * @param onGridSelectionChange On grid selection change handler
  * @param onPageSizeChange On page size change handler
  * @param loading Loading flag
+ * @param selectionModel Table selection model
  * @constructor
  */
 const AuthorsDataGrid: FC<Props> = ({
@@ -34,7 +30,8 @@ const AuthorsDataGrid: FC<Props> = ({
 	pageSize,
 	onGridSelectionChange,
 	onPageSizeChange,
-	loading
+	loading,
+	selectionModel
 }) => {
 	const [filterModelPtr, setFilterModelPtr] = useState<GridFilterModel>({
 		items: [],
@@ -45,7 +42,7 @@ const AuthorsDataGrid: FC<Props> = ({
 
 	useEffect(() => {
 		const handleKeyDown = async (event: { keyCode: number }) => {
-			await handleResetAllTableFilters(event, onFilterChange, 'name');
+			await handleResetAllTableFilters(event, onFilterChange, 'name', onGridSelectionChange);
 		};
 
 		document.addEventListener('keydown', handleKeyDown);
@@ -87,6 +84,7 @@ const AuthorsDataGrid: FC<Props> = ({
 				autoHeight
 				rows={rows}
 				onSelectionModelChange={onGridSelectionChange}
+				selectionModel={selectionModel}
 				columns={columns}
 				pageSize={pageSize}
 				onPageSizeChange={onPageSizeChange}

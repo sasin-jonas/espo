@@ -1,18 +1,12 @@
-import { FC, useEffect, useState } from 'react';
-import { Box, Tooltip } from '@mui/material';
-import {
-	DataGrid,
-	GridColDef,
-	GridFilterModel,
-	GridLinkOperator,
-	GridRenderCellParams
-} from '@mui/x-data-grid';
+import {FC, useEffect, useState} from 'react';
+import {Box, Tooltip} from '@mui/material';
+import {DataGrid, GridColDef, GridFilterModel, GridLinkOperator, GridRenderCellParams} from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { RoleDto, UserDto } from '../../types/User.Types';
+import {RoleDto, UserDto} from '../../types/User.Types';
 
 import UserEdit from './UserEdit';
-import { handleResetAllTableFilters } from '../../utils/utilFunctions';
+import {handleResetAllTableFilters} from '../../utils/utilFunctions';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
@@ -45,7 +39,7 @@ const UsersDataGrid: FC<Props> = ({
 
 	useEffect(() => {
 		const handleKeyDown = async (event: { keyCode: number }) => {
-			await handleResetAllTableFilters(event, onFilterChange, 'name');
+			await handleResetAllTableFilters(event, onFilterChange, 'name', undefined);
 		};
 
 		document.addEventListener('keydown', handleKeyDown);

@@ -1,25 +1,22 @@
-import { FC, useCallback, useContext, useEffect, useState } from 'react';
-import { Box, Grid, SelectChangeEvent, Tooltip } from '@mui/material';
-import { GridSelectionModel } from '@mui/x-data-grid';
-import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
-import { useQueryClient } from 'react-query';
+import {FC, useCallback, useContext, useEffect, useState} from 'react';
+import {Box, Grid, SelectChangeEvent, Tooltip} from '@mui/material';
+import {GridSelectionModel} from '@mui/x-data-grid';
+import {AuthContext, IAuthContext} from 'react-oauth2-code-pkce';
+import {useQueryClient} from 'react-query';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 import usePageTitle from '../hooks/usePageTitle';
-import { OpportunityDto } from '../types/Opportunity.Types';
+import {OpportunityDto} from '../types/Opportunity.Types';
 import AutocompleteTagSelect from '../components/controls/AutocompleteTagSelect';
 import ProjectsDataGrid from '../components/project/ProjectsDataGrid';
 import MaxResultsComboBox from '../components/controls/MaxResultsComboBox';
 import CheckBoxWithLabel from '../components/controls/CheckBoxWithLabel';
 import SearchButton from '../components/controls/SearchButton';
 import SearchResults from '../components/display/SearchResults';
-import {
-	useGetAllFilterValues,
-	useSearchByProjects
-} from '../hooks/api/useSearchApi';
-import { AppAlertTypes } from '../types/Alert.Types';
-import { useAlert } from '../hooks/useAppAlert';
-import { SearchProjectDto } from '../types/Search.Types';
+import {useGetAllFilterValues, useSearchByProjects} from '../hooks/api/useSearchApi';
+import {AppAlertTypes} from '../types/Alert.Types';
+import {useAlert} from '../hooks/useAppAlert';
+import {SearchProjectDto} from '../types/Search.Types';
 
 /**
  * Search by project page
@@ -170,6 +167,7 @@ const SearchByProjectPage: FC = () => {
 					selection
 					serverSide
 					administrate={false}
+					selectionModel={selectedRows}
 				/>
 			</Box>
 			<Grid container justifyContent="left" spacing={3}>

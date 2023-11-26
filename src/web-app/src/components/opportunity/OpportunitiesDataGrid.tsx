@@ -1,5 +1,5 @@
-import { FC, useContext, useEffect, useRef, useState } from 'react';
-import { Box, Tooltip } from '@mui/material';
+import {FC, useContext, useEffect, useRef, useState} from 'react';
+import {Box, Tooltip} from '@mui/material';
 import {
 	DataGrid,
 	GridColDef,
@@ -11,20 +11,17 @@ import {
 	GridSortItem,
 	GridSortModel
 } from '@mui/x-data-grid';
-import { Visibility } from '@mui/icons-material';
-import { useQueryClient } from 'react-query';
-import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
-import { AxiosResponse } from 'axios';
+import {Visibility} from '@mui/icons-material';
+import {useQueryClient} from 'react-query';
+import {AuthContext, IAuthContext} from 'react-oauth2-code-pkce';
+import {AxiosResponse} from 'axios';
 
 import {
 	useDeleteOpportunity,
 	useGetFilteredOpportunities,
 	useGetOpportunitiesFirstPage
 } from '../../hooks/api/useOpportunityApi';
-import {
-	OpportunityDto,
-	OpportunityPageable
-} from '../../types/Opportunity.Types';
+import {OpportunityDto, OpportunityPageable} from '../../types/Opportunity.Types';
 import {
 	checkRemainingTime,
 	containsOnlyFilterOperators,
@@ -34,11 +31,11 @@ import {
 	isDescString
 } from '../../utils/utilFunctions';
 import DeleteButtonWithConfirmDialog from '../controls/DeleteButtonWithConfirmDialog';
-import { useAlert } from '../../hooks/useAppAlert';
-import { AppAlertTypes } from '../../types/Alert.Types';
+import {useAlert} from '../../hooks/useAppAlert';
+import {AppAlertTypes} from '../../types/Alert.Types';
 
 import OpportunityDetail from './OpportunityDetail';
-import { GridInputSelectionModel } from '@mui/x-data-grid/models/gridSelectionModel';
+import {GridInputSelectionModel} from '@mui/x-data-grid/models/gridSelectionModel';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 type Props = {
@@ -129,12 +126,7 @@ const OpportunitiesDataGrid: FC<Props> = ({
 	}, [queryOptions]);
 	useEffect(() => {
 		const handleKeyDown = async (event: { keyCode: number }) => {
-			await handleResetAllTableFiltersAndSort(
-				event,
-				onFilterChange,
-				'title',
-				onSortChange
-			);
+			await handleResetAllTableFiltersAndSort(event, onFilterChange, 'title', onSortChange, onGridSelectionChange);
 			await onSortChange([]);
 		};
 
